@@ -8,6 +8,7 @@ import (
 
 // UUid generator
 // newUUID generates a random UUID according to RFC 4122
+// Credit to https://play.golang.org/p/4FkNSiUDMg
 func NewUUID() (string, error) {
 	uuid := make([]byte, 16)
 	n, err := io.ReadFull(rand.Reader, uuid)
