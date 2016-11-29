@@ -2,14 +2,25 @@
 // Primarily for simulation
 package clusterds
 
-// Write message
-type WriteMsg struct {
+// Write request
+type WriteReq struct {
 	Content string
 	Size    float64
 }
 
-// Read message
-type ReadMsg struct {
+// Write response
+type WriteResp struct {
 	PartitionID string
 	BlobID      string
+}
+
+// Read request
+type ReadReq struct {
+	PartitionID string
+	BlobID      string
+}
+
+// Read response
+type ReadResp struct {
+	Content string
 }

@@ -1,0 +1,7 @@
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
+{"CreateTimestamp":1480396412,"PartitionSize":1,"level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
+{"BlobID":"38c602e2-30a7-410a-a0c8-196b1519c4a3","BlobSize":1,"Content":"aaa","CreateTimestamp":1480396412,"level":"info","msg":"Blob 38c602e2-30a7-410a-a0c8-196b1519c4a3","time":"2016-11-29T00:13:35-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
+T00:10:55-05:00"}
+{"BlobID":"4033ea35-b6c5-4193-bb78-e9e1c8fe2727","BlobSize":3,"Content":"bbb","CreateTimestamp":1480396253,"level":"info","msg":"Blob 4033ea35-b6c5-4193-bb78-e9e1c8fe2727","time":"2016-11-29T00:10:55-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 1","time":"2016-11-29T00:10:55-05:00"}

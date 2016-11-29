@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	ds "github.com/enirinth/read-clock/clusterds"
 	"log"
 	"net/rpc"
@@ -18,7 +19,7 @@ func main() {
 
 	in := bufio.NewReader(os.Stdin)
 	for {
-		// Parse message from stdin
+		// Parse stdin
 		line, err := in.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
@@ -29,12 +30,16 @@ func main() {
 			log.Fatal(err)
 		}
 		content := words[0]
-		var msg = ds.WriteMsg{content, size}
-		var reply bool
-		// Send message
-		err = client.Call("Listener.GetLine", msg, &reply)
+
+		// Pack message from stdin to WriteReq, initiates struct to get response
+		var msg = ds.WriteReq{content, size}
+		var reply ds.WriteResp
+
+		// Send message to storage server, response stored in &reply
+		err = client.Call("Listener.HandleWriteReq", msg, &reply)
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(reply)
 	}
 }

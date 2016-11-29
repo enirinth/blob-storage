@@ -1,12 +1,13 @@
 // Definition of data structures for cluster manager
 package clusterds
 
-// ClusterMap
+// ClusterMap -- mapping partition to a list of DCs that store it
 type PartitionState struct {
 	PartitionID string
 	DCList      []string
 }
 
+// Store two types of read counts
 type NumRead struct {
 	LocalRead  uint64
 	GlobalRead uint64
@@ -20,10 +21,12 @@ type Partition struct {
 	PartitionSize   float64
 }
 
-func (Par *Partition) AppendBlob(B Blob) {
-	Par.BlobList = append(Par.BlobList, B)
+// Append blob to a partition ('s blob list)
+func (par *Partition) AppendBlob(b Blob) {
+	(*par).BlobList = append((*par).BlobList, b)
 }
 
+// Fake blob object
 type Blob struct {
 	BlobID          string
 	Content         string
