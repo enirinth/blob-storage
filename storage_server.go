@@ -38,14 +38,14 @@ func persistStorage(table *map[string]*ds.Partition) {
 	// Periodically log storage
 	t := time.NewTicker(logInterval)
 	for {
+		fmt.Println("Starting to persist storage")
 		// Delete old storage log
-		_, existErr := os.Stat(storage_log) // if file exists
-		if os.IsExist(existErr) {
+		_, e := os.Stat(storage_log) // if file exists
+		if e == nil {
 			err := os.Remove(storage_log)
 			if err != nil {
 				fmt.Println(err.Error())
 				log.Fatal(err)
-				os.Exit(3)
 			}
 		}
 		// Log latest storage
@@ -110,6 +110,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		}
 
 		if len(partitionID) == 0 { // If all partitions are full create a new one
+			// TODO: also create new entry in replica map
 			partitionID, err = util.NewUUID()
 			if err != nil {
 				log.Fatal(err)
@@ -143,13 +144,14 @@ func init() {
 	}
 	log.SetOutput(f)
 
-	// Initiates a thread that periodically persist storage into a log file (on disk)
-	go persistStorage(&storageTable)
 }
 
 // Server main loop
 func main() {
 	fmt.Println("Storage server starts")
+
+	// Initiates a thread that periodically persist storage into a log file (on disk)
+	go persistStorage(&storageTable)
 
 	// Main loop
 	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:42586")
