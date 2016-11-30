@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DCID             int           = 1                // Id of current DC
+	DCID             string        = "DC_1"           // Id of current DC
 	numDC            int           = 3                // total number of DCs
 	maxPartitionSize float64       = 10               // maximum size of partition (excluding metadata)
 	storage_log      string        = "storage_log"    // file path that logs the storage
@@ -26,11 +26,11 @@ type (
 
 var (
 	// Cluster map data structures
-	ReplicaMap = make(map[string]ds.PartitionState)
-	ReadMap    = make(map[string]ds.NumRead)
+	ReplicaMap = make(map[string]*ds.PartitionState)
 
 	// Local (intra-DC) storage data structures
 	storageTable = make(map[string]*ds.Partition)
+	ReadMap      = make(map[string]*ds.NumRead)
 )
 
 // Persist storage into a log file
@@ -99,7 +99,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 			log.Fatal(err)
 		}
 
-		// Select the first partition that is not full (different from Ambry)
+		// Select the first partition that is not full (this is different from Ambry)
 		// TODO: Need fine-grained locking here
 		partitionID := ""
 		for id, partition := range storageTable {
@@ -111,11 +111,15 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 
 		if len(partitionID) == 0 { // If all partitions are full create a new one
 			// TODO: also create new entry in replica map
+			// TODO: also create new entry in read map
 			partitionID, err = util.NewUUID()
 			if err != nil {
 				log.Fatal(err)
 			}
 			storageTable[partitionID] = &(ds.Partition{partitionID, []ds.Blob{{blobUUID, content, size, now}}, now, size})
+			// Crete new entries in replica map and read map
+			ReadMap[partitionID] = &(ds.NumRead{0, 0})
+			ReplicaMap[partitionID] = &(ds.PartitionState{partitionID, []string{DCID}})
 		} else {
 			// Add blob to storageTable
 			storageTable[partitionID].AppendBlob(ds.Blob{blobUUID, content, size, now})
@@ -132,6 +136,37 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	}(req, resp)
 
 	wg.Wait() // wait for handler thread to finish, then return reply message
+	return nil
+}
+
+// Read request handler
+// TOOD: update read map
+func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	// Create a new thread handling request
+	go func(req ds.ReadReq, resp *ds.ReadResp) {
+		defer wg.Done()
+
+		// Parse read request
+		partitionID := req.PartitionID
+		blobID := req.BlobID
+
+		// Look for target blob
+		for _, blob := range storageTable[partitionID].BlobList {
+			if blob.BlobID == blobID {
+				*resp = ds.ReadResp{blob.Content, blob.BlobSize}
+				break
+			}
+		}
+
+		// Update read count
+		// ReadMap[partitionID].GlobalRead += 1
+		ReadMap[partitionID].LocalRead += 1
+	}(req, resp)
+
+	wg.Wait()
 	return nil
 }
 

@@ -1,4 +1,4 @@
-package main
+package clusterLocking
 
 import (
 	ds "github.com/enirinth/read-clock/clusterds"

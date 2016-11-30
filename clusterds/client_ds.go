@@ -23,4 +23,5 @@ type ReadReq struct {
 // Read response
 type ReadResp struct {
 	Content string
+	Size    float64
 }
