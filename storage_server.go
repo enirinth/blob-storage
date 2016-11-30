@@ -12,48 +12,71 @@ import (
 	"time"
 )
 
-const maxPartitionSize = 10 // maximum size of partition (excluding metadata)
-const numDC int = 3         // total number of DCs
+const (
+	DCID             int           = 1                // Id of current DC
+	numDC            int           = 3                // total number of DCs
+	maxPartitionSize float64       = 10               // maximum size of partition (excluding metadata)
+	storage_log      string        = "storage_log"    // file path that logs the storage
+	logInterval      time.Duration = time.Minute * 10 // time interval to log storage
+)
 
-type Listener int
+type (
+	Listener int
+)
 
-// Cluster map data structures
-var ReplicaMap = make(map[string]ds.PartitionState)
+var (
+	// Cluster map data structures
+	ReplicaMap = make(map[string]ds.PartitionState)
+	ReadMap    = make(map[string]ds.NumRead)
 
-var ReadMap = make(map[string]ds.NumRead)
-
-// Local (intra-DC) storage data structures
-var storageTable = make(map[string]*ds.Partition)
+	// Local (intra-DC) storage data structures
+	storageTable = make(map[string]*ds.Partition)
+)
 
 // Persist storage into a log file
 func persistStorage(table *map[string]*ds.Partition) {
-	time.Sleep(time.Second * 10)
-	for partitionID, partition := range *table {
-		// Mark partition beginning
-		log.WithFields(log.Fields{
-			"Partition starts": "-----------------------------",
-		}).Info("Partition " + partitionID)
-
-		// Persist partition information
-		log.WithFields(log.Fields{
-			"CreateTimestamp": partition.CreateTimestamp,
-			"PartitionSize":   partition.PartitionSize,
-		}).Info("Partition " + partitionID)
-
-		// Persist all blobs from a certain partition
-		for _, blob := range (*partition).BlobList {
-			log.WithFields(log.Fields{
-				"BlobID":          blob.BlobID,
-				"Content":         blob.Content,
-				"BlobSize":        blob.BlobSize,
-				"CreateTimestamp": blob.CreateTimestamp,
-			}).Info("Blob " + blob.BlobID)
+	// Periodically log storage
+	t := time.NewTicker(logInterval)
+	for {
+		// Delete old storage log
+		_, existErr := os.Stat(storage_log) // if file exists
+		if os.IsExist(existErr) {
+			err := os.Remove(storage_log)
+			if err != nil {
+				fmt.Println(err.Error())
+				log.Fatal(err)
+				os.Exit(3)
+			}
 		}
+		// Log latest storage
+		for partitionID, partition := range *table {
+			// Mark partition beginning
+			log.WithFields(log.Fields{
+				"Partition starts": "-----------------------------",
+			}).Info("Partition " + partitionID)
 
-		// Mark partition ending
-		log.WithFields(log.Fields{
-			"Partition ends": "-------------------------------",
-		}).Info("Partition " + partitionID)
+			// Persist partition information
+			log.WithFields(log.Fields{
+				"CreateTimestamp": partition.CreateTimestamp,
+				"PartitionSize":   partition.PartitionSize,
+			}).Info("Partition " + partitionID)
+
+			// Persist all blobs from a certain partition
+			for _, blob := range (*partition).BlobList {
+				log.WithFields(log.Fields{
+					"BlobID":          blob.BlobID,
+					"Content":         blob.Content,
+					"BlobSize":        blob.BlobSize,
+					"CreateTimestamp": blob.CreateTimestamp,
+				}).Info("Blob " + blob.BlobID)
+			}
+
+			// Mark partition ending
+			log.WithFields(log.Fields{
+				"Partition ends": "-------------------------------",
+			}).Info("Partition " + partitionID)
+		}
+		<-t.C
 	}
 }
 
@@ -114,7 +137,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 func init() {
 	// Log settings
 	log.SetFormatter(&log.JSONFormatter{})
-	f, err := os.OpenFile("storage_log", os.O_WRONLY|os.O_CREATE, 0755)
+	f, err := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}

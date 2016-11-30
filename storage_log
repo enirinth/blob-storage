@@ -1,7 +1,28 @@
-{"Partition starts":"-----------------------------","level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
-{"CreateTimestamp":1480396412,"PartitionSize":1,"level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
-{"BlobID":"38c602e2-30a7-410a-a0c8-196b1519c4a3","BlobSize":1,"Content":"aaa","CreateTimestamp":1480396412,"level":"info","msg":"Blob 38c602e2-30a7-410a-a0c8-196b1519c4a3","time":"2016-11-29T00:13:35-05:00"}
-{"Partition ends":"-------------------------------","level":"info","msg":"Partition fa242450-8975-420c-a113-61880e59785a","time":"2016-11-29T00:13:35-05:00"}
-T00:10:55-05:00"}
-{"BlobID":"4033ea35-b6c5-4193-bb78-e9e1c8fe2727","BlobSize":3,"Content":"bbb","CreateTimestamp":1480396253,"level":"info","msg":"Blob 4033ea35-b6c5-4193-bb78-e9e1c8fe2727","time":"2016-11-29T00:10:55-05:00"}
-{"Partition ends":"-------------------------------","level":"info","msg":"Partition 1","time":"2016-11-29T00:10:55-05:00"}
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:40-05:00"}
+{"CreateTimestamp":1480463855,"PartitionSize":1,"level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:40-05:00"}
+{"BlobID":"a81fbfb9-2e89-4a2c-b902-46249a8472d1","BlobSize":1,"Content":"haoran","CreateTimestamp":1480463855,"level":"info","msg":"Blob a81fbfb9-2e89-4a2c-b902-46249a8472d1","time":"2016-11-29T18:57:40-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:40-05:00"}
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:45-05:00"}
+{"CreateTimestamp":1480463855,"PartitionSize":6,"level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:45-05:00"}
+{"BlobID":"a81fbfb9-2e89-4a2c-b902-46249a8472d1","BlobSize":1,"Content":"haoran","CreateTimestamp":1480463855,"level":"info","msg":"Blob a81fbfb9-2e89-4a2c-b902-46249a8472d1","time":"2016-11-29T18:57:45-05:00"}
+{"BlobID":"b3dea974-e209-4e18-a4d1-701b7debfe49","BlobSize":2,"Content":"ruichen","CreateTimestamp":1480463862,"level":"info","msg":"Blob b3dea974-e209-4e18-a4d1-701b7debfe49","time":"2016-11-29T18:57:45-05:00"}
+{"BlobID":"0ccc2ca2-9680-43fb-9e17-27c4b900b095","BlobSize":3,"Content":"arjun","CreateTimestamp":1480463863,"level":"info","msg":"Blob 0ccc2ca2-9680-43fb-9e17-27c4b900b095","time":"2016-11-29T18:57:45-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:45-05:00"}
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:50-05:00"}
+{"CreateTimestamp":1480463855,"PartitionSize":6,"level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:50-05:00"}
+{"BlobID":"a81fbfb9-2e89-4a2c-b902-46249a8472d1","BlobSize":1,"Content":"haoran","CreateTimestamp":1480463855,"level":"info","msg":"Blob a81fbfb9-2e89-4a2c-b902-46249a8472d1","time":"2016-11-29T18:57:50-05:00"}
+{"BlobID":"b3dea974-e209-4e18-a4d1-701b7debfe49","BlobSize":2,"Content":"ruichen","CreateTimestamp":1480463862,"level":"info","msg":"Blob b3dea974-e209-4e18-a4d1-701b7debfe49","time":"2016-11-29T18:57:50-05:00"}
+{"BlobID":"0ccc2ca2-9680-43fb-9e17-27c4b900b095","BlobSize":3,"Content":"arjun","CreateTimestamp":1480463863,"level":"info","msg":"Blob 0ccc2ca2-9680-43fb-9e17-27c4b900b095","time":"2016-11-29T18:57:50-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:50-05:00"}
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:55-05:00"}
+{"CreateTimestamp":1480463855,"PartitionSize":6,"level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:55-05:00"}
+{"BlobID":"a81fbfb9-2e89-4a2c-b902-46249a8472d1","BlobSize":1,"Content":"haoran","CreateTimestamp":1480463855,"level":"info","msg":"Blob a81fbfb9-2e89-4a2c-b902-46249a8472d1","time":"2016-11-29T18:57:55-05:00"}
+{"BlobID":"b3dea974-e209-4e18-a4d1-701b7debfe49","BlobSize":2,"Content":"ruichen","CreateTimestamp":1480463862,"level":"info","msg":"Blob b3dea974-e209-4e18-a4d1-701b7debfe49","time":"2016-11-29T18:57:55-05:00"}
+{"BlobID":"0ccc2ca2-9680-43fb-9e17-27c4b900b095","BlobSize":3,"Content":"arjun","CreateTimestamp":1480463863,"level":"info","msg":"Blob 0ccc2ca2-9680-43fb-9e17-27c4b900b095","time":"2016-11-29T18:57:55-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:57:55-05:00"}
+{"Partition starts":"-----------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:58:00-05:00"}
+{"CreateTimestamp":1480463855,"PartitionSize":6,"level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:58:00-05:00"}
+{"BlobID":"a81fbfb9-2e89-4a2c-b902-46249a8472d1","BlobSize":1,"Content":"haoran","CreateTimestamp":1480463855,"level":"info","msg":"Blob a81fbfb9-2e89-4a2c-b902-46249a8472d1","time":"2016-11-29T18:58:00-05:00"}
+{"BlobID":"b3dea974-e209-4e18-a4d1-701b7debfe49","BlobSize":2,"Content":"ruichen","CreateTimestamp":1480463862,"level":"info","msg":"Blob b3dea974-e209-4e18-a4d1-701b7debfe49","time":"2016-11-29T18:58:00-05:00"}
+{"BlobID":"0ccc2ca2-9680-43fb-9e17-27c4b900b095","BlobSize":3,"Content":"arjun","CreateTimestamp":1480463863,"level":"info","msg":"Blob 0ccc2ca2-9680-43fb-9e17-27c4b900b095","time":"2016-11-29T18:58:00-05:00"}
+{"Partition ends":"-------------------------------","level":"info","msg":"Partition 2aa32799-e05c-4b96-926c-7a6e2272778f","time":"2016-11-29T18:58:00-05:00"}
