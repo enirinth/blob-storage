@@ -15,7 +15,7 @@ import (
 const (
 	DCID             string        = "DC_1"           // Id of current DC
 	numDC            int           = 3                // total number of DCs
-	maxPartitionSize float64       = 10               // maximum size of partition (excluding metadata)
+	MaxPartitionSize float64       = 10               // maximum size of partition (excluding metadata)
 	storage_log      string        = "storage_log"    // file path that logs the storage
 	logInterval      time.Duration = time.Minute * 10 // time interval to log storage
 )
