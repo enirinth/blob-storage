@@ -123,7 +123,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		}
 
 		// Reply with (PartitionID, blobID) pair
-		*resp = ds.WriteResp{"1", blobUUID}
+		*resp = ds.WriteResp{partitionID, blobUUID}
 
 		// Print storage table after write
 		fmt.Println("Storage Table after update:")
