@@ -16,5 +16,5 @@ I've created an alias as follows
 alias sugo='sudo /bin/env GOPATH=\$HOME/workspace/gowork'
 ```
 For security reasons, `sudo` does not honor some of the environmental variables, so you will get a `$GOPATH not set` error if you use `sudo go ....`    
-So **Always remeber to use `sugo` before any go commands**
+i.e. **Always remeber to use `sugo` before any go commands**
 
