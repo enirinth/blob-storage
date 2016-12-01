@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	ds "github.com/enirinth/read-clock/clusterds"
+	ds "github.com/enirinth/blob-storage/clusterds"
 	"log"
 	"net/rpc"
 	"os"

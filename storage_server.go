@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	ds "github.com/enirinth/read-clock/clusterds"
-	util "github.com/enirinth/read-clock/util"
+	ds "github.com/enirinth/blob-storage/clusterds"
+	util "github.com/enirinth/blob-storage/util"
 	"net"
 	"net/rpc"
 	"os"

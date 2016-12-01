@@ -3,7 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"fmt"
-	ds "github.com/enirinth/read-clock/clusterds"
+	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
 )
 
