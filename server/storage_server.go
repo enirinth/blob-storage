@@ -40,7 +40,7 @@ func persistStorage(table *map[string]*ds.Partition) {
 	for {
 		fmt.Println("Starting to persist storage")
 		// Delete old storage log
-		_, e := os.Stat(storage_log) // if file exists
+		_, e := os.Open(storage_log, os.O_WRONLY|os.O_CREATE, 0755) // if file exists
 		if e == nil {
 			err := os.Remove(storage_log)
 			if err != nil {
