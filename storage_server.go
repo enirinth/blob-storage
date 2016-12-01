@@ -103,7 +103,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		// TODO: Need fine-grained locking here
 		partitionID := ""
 		for id, partition := range storageTable {
-			if partition.PartitionSize+size <= maxPartitionSize {
+			if partition.PartitionSize+size <= MaxPartitionSize {
 				partitionID = id
 				break
 			}
