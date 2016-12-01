@@ -173,6 +173,15 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 func init() {
 	// Log settings
 	log.SetFormatter(&log.JSONFormatter{})
+	_, e := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
+	if e != nil {
+		// If log file doesn't exist, create new one
+		_, err := os.Create(storage_log)
+		if err != nil {
+			fmt.Println(err.Error())
+			log.Fatal(err)
+		}
+	}
 	f, err := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Fatal(err)
