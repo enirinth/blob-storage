@@ -6,6 +6,7 @@ How to
 bash aws-setup.sh
 source ~/.bashrc
 ```
+Run above after you login in a **newly launched** AWS instances (EC2, free-tier, RHEL) i.e. Don't run `aws-setup.sh` more than once
 ## Update project code base
 ```sh
 sugo go get github.com/enirinth/blob-storage
