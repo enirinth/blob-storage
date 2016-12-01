@@ -6,7 +6,7 @@ How to
 bash aws-setup.sh
 source ~/.bashrc
 ```
-Run above after you login in a **newly launched** AWS instances (EC2, free-tier, RHEL) i.e. Don't run `aws-setup.sh` more than once
+Run above after you login a **newly launched** AWS instances (EC2, free-tier, RHEL) i.e. Don't run `aws-setup.sh` more than once
 ## Update project code base
 ```sh
 sugo go get github.com/enirinth/blob-storage
@@ -17,5 +17,5 @@ I've created an alias as follows
 alias sugo='sudo /bin/env GOPATH=\$HOME/workspace/gowork'
 ```
 For security reasons, `sudo` does not honor some of the environmental variables, so you will get a `$GOPATH not set` error if you use `sudo go ....`    
-i.e. **Always remeber to use `sugo` before any go commands**
+i.e. **Always remember to use `sugo` before any go commands**
 
