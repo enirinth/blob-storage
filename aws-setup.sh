@@ -34,6 +34,6 @@ sudo /bin/env GOPATH=$HOME/workspace/gowork go get -u github.com/enirinth/blob-s
 echo "alias cd582='cd \$HOME/workspace/gowork/src/github.com/enirinth/blob-storage'" >> ~/.bashrc
 echo "alias sugo='sudo /bin/env GOPATH=\$HOME/workspace/gowork'" >> ~/.bashrc
 
-# Remember to source ~/.bashrc when after running this script
+# Remember to source ~/.bashrc after running this script
 
 
