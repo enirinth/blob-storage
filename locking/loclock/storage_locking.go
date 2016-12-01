@@ -1,4 +1,4 @@
-package clusterLocking
+package loclock
 
 import (
 	ds "github.com/enirinth/blob-storage/clusterds"

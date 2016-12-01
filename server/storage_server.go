@@ -4,6 +4,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
+	sl "github.com/enirinth/blob-storage/locking/loclock"
 	util "github.com/enirinth/blob-storage/util"
 	"net"
 	"net/rpc"
