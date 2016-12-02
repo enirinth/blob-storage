@@ -34,7 +34,7 @@ var (
 	ReadMap      = make(map[string]*ds.NumRead)
 
 	// Locking
-	storeLock loclock.StorageLockMap // Fined-grained locking for storage map
+	rcLock loclock.ReadCountLockMap // Fined-grained locking for ReadMap (read-count map)
 )
 
 // Persist storage into a log file
@@ -114,16 +114,17 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		}
 
 		if len(partitionID) == 0 { // If all partitions are full create a new one
-			// TODO: also create new entry in replica map
-			// TODO: also create new entry in read map
 			partitionID, err = util.NewUUID()
 			if err != nil {
 				log.Fatal(err)
 			}
+			// Create new entries in  storage table
 			storageTable[partitionID] = &(ds.Partition{partitionID, []ds.Blob{{blobUUID, content, size, now}}, now, size})
 			// Crete new entries in replica map and read map
 			ReadMap[partitionID] = &(ds.NumRead{0, 0})
 			ReplicaMap[partitionID] = &(ds.PartitionState{partitionID, []string{DCID}})
+			// Create new entries in lock map
+			rcLock.AddEntry(partitionID)
 		} else {
 			// Add blob to storageTable
 			storageTable[partitionID].AppendBlob(ds.Blob{blobUUID, content, size, now})
@@ -144,7 +145,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 }
 
 // Read request handler
-// TOOD: update read map
+// TODO: update read map
 func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -158,18 +159,18 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 		blobID := req.BlobID
 
 		// Look for target blob
-		storeLock.RLock(partitionID)
 		for _, blob := range storageTable[partitionID].BlobList {
 			if blob.BlobID == blobID {
 				*resp = ds.ReadResp{blob.Content, blob.BlobSize}
 				break
 			}
 		}
-		storeLock.RUnlock(partitionID)
 
 		// Update read count
+		rcLock.WLock(partitionID)
 		// ReadMap[partitionID].GlobalRead += 1
 		ReadMap[partitionID].LocalRead += 1
+		rcLock.WUnlock(partitionID)
 	}(req, resp)
 
 	wg.Wait()
@@ -194,7 +195,7 @@ func init() {
 	}
 	log.SetOutput(f)
 	// Setup locking
-	storeLock.CreateLockMap(&storageTable)
+	rcLock.CreateLockMap(&ReadMap)
 }
 
 // Server main loop
