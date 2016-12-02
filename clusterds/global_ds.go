@@ -22,8 +22,8 @@ type Partition struct {
 }
 
 // Append blob to a partition ('s blob list)
-func (par *Partition) AppendBlob(b Blob) {
-	(*par).BlobList = append((*par).BlobList, b)
+func (p *Partition) AppendBlob(b Blob) {
+	(*p).BlobList = append((*p).BlobList, b)
 }
 
 // Fake blob object
