@@ -21,18 +21,17 @@ sudo mv go /usr/local
 sudo ln -s /usr/local/go/bin/go /usr/bin/go 
 
 # Go path setttings
-sudo mkdir -p $HOME/workspace/gowork
+mkdir -p $HOME/workspace/gowork
 echo "export GOROOT=/usr/local/go" >> ~/.bashrc
-echo "export GOPATH=$HOME/workspace/gowork" >> ~/.bashrc
+echo "export GOPATH=\$HOME/workspace/gowork" >> ~/.bashrc
 echo "export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH" >> ~/.bashrc
 
 # Get project source code (and dependencies)
-sudo /bin/env GOPATH=$HOME/workspace/gowork go get -u github.com/Sirupsen/logrus
-sudo /bin/env GOPATH=$HOME/workspace/gowork go get -u github.com/enirinth/blob-storage
+go get -u github.com/Sirupsen/logrus
+go get -u github.com/enirinth/blob-storage
 
 # Useful utilities
 echo "alias cd582='cd \$HOME/workspace/gowork/src/github.com/enirinth/blob-storage'" >> ~/.bashrc
-echo "alias sugo='sudo /bin/env GOPATH=\$HOME/workspace/gowork'" >> ~/.bashrc
 
 # Remember to source ~/.bashrc after running this script
 
