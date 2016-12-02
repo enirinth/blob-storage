@@ -5,37 +5,37 @@ import (
 	"sync"
 )
 
-var StorageLockMap map[string]*sync.RWMutex
+type StorageLockMap map[string]*sync.RWMutex
 
 // Constructor (according to Storage Map
-func (*StorageLockMap) createLockMap(storageMap *map[string]*ds.Partition) {
-	for k, _ := range storageMap {
+func (s StorageLockMap) CreateLockMap(storageMap *map[string]*ds.Partition) {
+	for k, _ := range *storageMap {
 		var m sync.RWMutex
-		StorageLockMap[k] = &m
+		s[k] = &m
 	}
 }
 
-func (*StorageLockMap) addEntry(newPartitionID string) {
+func (s StorageLockMap) AddEntry(newPartitionID string) {
 	var m sync.RWMutex
-	StorageLockMap[newPartitionID] = &m
+	s[newPartitionID] = &m
 }
 
 // Reader lock
-func (*StorageLockMap) RLock(partitionID string) {
-	StorageMap[partitionID].RLock()
+func (s StorageLockMap) RLock(partitionID string) {
+	s[partitionID].RLock()
 }
 
 // Reader unlock
-func (*StorageLockMap) RUnlock(partitionID string) {
-	StorageMap[partitionID].RUnlock()
+func (s StorageLockMap) RUnlock(partitionID string) {
+	s[partitionID].RUnlock()
 }
 
 // Writer lock
-func (*StorageLockMap) WLock(partitionID string) {
-	StorageMap[partitionID].Lock()
+func (s StorageLockMap) WLock(partitionID string) {
+	s[partitionID].Lock()
 }
 
 // Writer unlock
-func (*StorageLockMap) WUnlock(partitionID string) {
-	StorageMap[partitionID].Unlock()
+func (s StorageLockMap) WUnlock(partitionID string) {
+	s[partitionID].Unlock()
 }

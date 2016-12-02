@@ -4,8 +4,8 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
-	sl "github.com/enirinth/blob-storage/locking/loclock"
-	util "github.com/enirinth/blob-storage/util"
+	"github.com/enirinth/blob-storage/locking/loclock"
+	"github.com/enirinth/blob-storage/util"
 	"net"
 	"net/rpc"
 	"os"
@@ -32,6 +32,9 @@ var (
 	// Local (intra-DC) storage data structures
 	storageTable = make(map[string]*ds.Partition)
 	ReadMap      = make(map[string]*ds.NumRead)
+
+	// Locking
+	storeLock loclock.StorageLockMap // Fined-grained locking for storage map
 )
 
 // Persist storage into a log file
@@ -155,12 +158,14 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 		blobID := req.BlobID
 
 		// Look for target blob
+		storeLock.RLock(partitionID)
 		for _, blob := range storageTable[partitionID].BlobList {
 			if blob.BlobID == blobID {
 				*resp = ds.ReadResp{blob.Content, blob.BlobSize}
 				break
 			}
 		}
+		storeLock.RUnlock(partitionID)
 
 		// Update read count
 		// ReadMap[partitionID].GlobalRead += 1
@@ -188,7 +193,8 @@ func init() {
 		log.Fatal(err)
 	}
 	log.SetOutput(f)
-
+	// Setup locking
+	storeLock.CreateLockMap(&storageTable)
 }
 
 // Server main loop
