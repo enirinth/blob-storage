@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"log"
@@ -28,6 +29,9 @@ func main() {
 		size, err := strconv.ParseFloat(words[1], 64)
 		if err != nil {
 			log.Fatal(err)
+		}
+		if size <= 0 {
+			log.Fatal(errors.New("File size cannot be smaller or equal to zero"))
 		}
 		content := words[0]
 

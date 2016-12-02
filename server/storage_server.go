@@ -85,7 +85,6 @@ func persistStorage(table *map[string]*ds.Partition) {
 }
 
 // Write request handler
-// TODO: deal with replica map and read map
 func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -104,7 +103,6 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		}
 
 		// Select the first partition that is not full (this is different from Ambry)
-		// TODO: Need fine-grained locking here
 		partitionID := ""
 		for id, partition := range storageTable {
 			if partition.PartitionSize+size <= MaxPartitionSize {
@@ -145,7 +143,6 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 }
 
 // Read request handler
-// TODO: update read map
 func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -159,18 +156,25 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 		blobID := req.BlobID
 
 		// Look for target blob
-		for _, blob := range storageTable[partitionID].BlobList {
-			if blob.BlobID == blobID {
-				*resp = ds.ReadResp{blob.Content, blob.BlobSize}
-				break
+		if _, ok := storageTable[partitionID]; ok {
+			for _, blob := range storageTable[partitionID].BlobList {
+				if blob.BlobID == blobID {
+					*resp = ds.ReadResp{blob.Content, blob.BlobSize}
+					break
+				}
 			}
 		}
 
-		// Update read count
-		rcLock.WLock(partitionID)
-		// ReadMap[partitionID].GlobalRead += 1
-		ReadMap[partitionID].LocalRead += 1
-		rcLock.WUnlock(partitionID)
+		if resp.Size != 0 {
+			// Update read count
+			rcLock.WLock(partitionID)
+			// ReadMap[partitionID].GlobalRead += 1
+			ReadMap[partitionID].LocalRead += 1
+			rcLock.WUnlock(partitionID)
+		} else {
+			// Not found
+			*resp = ds.ReadResp{"NOT_FOUND", 0}
+		}
 	}(req, resp)
 
 	wg.Wait()

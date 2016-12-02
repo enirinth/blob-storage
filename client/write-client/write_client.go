@@ -3,6 +3,7 @@ package main
 /// <partition_id, blob_id, rd_access>
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
@@ -37,6 +38,9 @@ func main() {
 	for i := 0; i < numFiles; i++ {
 		vars := strings.Split(lines[i], " ")
 		f, err := strconv.ParseFloat(vars[1], 64)
+		if vars[1] <= 0 {
+			log.Fatal(errors.New("File size cannot be smaller or equal to zero"))
+		}
 		var msg = ds.WriteReq{vars[0], f}
 		var reply ds.WriteResp
 
