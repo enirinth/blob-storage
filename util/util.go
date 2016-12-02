@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
@@ -28,5 +29,34 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 	for _, v := range *storageTable {
 		fmt.Println(*v)
 	}
+}
 
+// Find blob (using its ID) in a partition
+// return True if found
+func FindBlob(blobID string, partition *ds.Partition) bool {
+	for blob := range partition.BlobList {
+		if blobID == blob.BlobID {
+			return true
+		}
+	}
+	return false
+}
+
+// Merge two partitions to one that contains (in set semantics) all the blobs
+// Happens during inter-DC synchronization
+func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
+	if p1.PartitionID != p2.PartitionID {
+		err := errors.New("Cannot merge two different partitions (with different IDs)")
+		log.Fatal(err)
+	}
+	for blob := range p2.BlobList {
+		if !FindBlob(blob.BlobID, *p1) {
+			p1.AppendBlob(blob)
+		}
+	}
+	for blob := range p1.BlobList {
+		if !FindBlob(blob.BlobID, *p2) {
+			p2.AppendBlob(blob)
+		}
+	}
 }
