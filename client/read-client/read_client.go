@@ -1,17 +1,18 @@
 package main
 
 import (
-	// "bufio"
 	"fmt"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"log"
 	"net/rpc"
-	// "os"
     "io/ioutil"
     "strconv"
 	"strings"
+    "sync"
+    "time"
 )
 
+const numFiles = 10
 
 type info struct {
     PartitionID string
@@ -19,7 +20,10 @@ type info struct {
     readReqDist int64
 }
 
-func readFile() [5]info {
+var wg sync.WaitGroup
+// readResponses_chan := make(chan )
+
+func readFile() [numFiles]info {
     read_file := "out.txt"
     dat, err := ioutil.ReadFile(read_file)
     if err != nil {
@@ -27,10 +31,10 @@ func readFile() [5]info {
     }
     lines := strings.Split(string(dat), "\n")
 
-    const size = 5
 
-    var info_array [size] info
-    for i := 0; i < size; i++ {
+
+    var info_array [numFiles] info
+    for i := 0; i < numFiles; i++ {
         x := strings.Split(lines[i], " ")
         info_array[i].PartitionID = x[0]
         info_array[i].BlobID = x[1]
@@ -46,6 +50,8 @@ func readFile() [5]info {
 }
 
 func sendRequest(PartitionID string, BlobID string) {
+    defer wg.Done()
+    // fmt.Print("HERE0")
     client, err := rpc.Dial("tcp", "localhost:42586")
     if err != nil {
     	log.Fatal(err)
@@ -53,33 +59,34 @@ func sendRequest(PartitionID string, BlobID string) {
     // Pack message from stdin to WriteReq, initiates struct to get response
     var msg = ds.ReadReq{PartitionID, BlobID}
 	var reply ds.ReadResp
-
-    fmt.Println(PartitionID, BlobID)
+    // fmt.Println(PartitionID, BlobID)
 
 	// Send message to storage server, response stored in &reply
+    t0 := time.Now()
 	err = client.Call("Listener.HandleReadReq", msg, &reply)
+    t1 := time.Now()
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(reply)
+	fmt.Println(msg, reply, t1.Sub(t0))
 
     return
 }
 
 func main() {
-	// client, err := rpc.Dial("tcp", "localhost:42586")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-    /// Read p_id, b_id, rd_req
     info_array := readFile()
-    for i:=0; i<5; i++ {
-        // fmt.Println(info_array[i].PartitionID, info_array[i].BlobID)
-        sendRequest(info_array[i].PartitionID, info_array[i].BlobID)
+    test_cnt := 0
+    for i:=0; i<numFiles; i++ {
+        num_req_left := info_array[i].readReqDist
+        for num_req_left > 0 {
+            // fmt.Println(info_array[i].PartitionID + " " + info_array[i].BlobID + "\n")
+            wg.Add(1)
+            go sendRequest(info_array[i].PartitionID, info_array[i].BlobID)
+            num_req_left -= 1
+            test_cnt += 1
+        }
     }
-
-
-
-
+    wg.Wait()
+    fmt.Println(test_cnt)
 }
