@@ -4,8 +4,9 @@ package clusterds
 // Request types
 // Copy a partition to other DCs or delete a partition
 const (
-	PAR_COPY int = 1
-	PAR_DEL  int = 2
+	PAR_COPY    int = 1
+	PAR_DEL     int = 3
+	PAR_RELEASE int = 2
 )
 
 // Message struct
