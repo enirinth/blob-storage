@@ -22,6 +22,11 @@ sudo ln -s /usr/local/go/bin/go /usr/bin/go
 
 # Go path setttings
 mkdir -p $HOME/workspace/gowork
+
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/workspace/gowork
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
 echo "export GOROOT=/usr/local/go" >> ~/.bashrc
 echo "export GOPATH=\$HOME/workspace/gowork" >> ~/.bashrc
 echo "export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH" >> ~/.bashrc
