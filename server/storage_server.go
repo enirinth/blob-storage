@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"github.com/enirinth/blob-storage/locking/loclock"
 	"github.com/enirinth/blob-storage/util"
@@ -14,11 +15,11 @@ import (
 )
 
 const (
-	DCID             string        = "DC_1"           // Id of current DC
-	numDC            int           = 3                // total number of DCs
-	MaxPartitionSize float64       = 10               // maximum size of partition (excluding metadata)
-	storage_log      string        = "storage_log"    // file path that logs the storage
-	logInterval      time.Duration = time.Minute * 10 // time interval to log storage
+	DCID             string        = "DC_1"                  // Id of current DC
+	numDC            int           = config.NumDC            // total number of DCs
+	MaxPartitionSize float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
+	storage_log      string        = config.StorageFilename  // file path that logs the storage
+	logInterval      time.Duration = config.LogTimeInterval  // time interval to log storage
 )
 
 type (

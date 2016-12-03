@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
 )
@@ -34,7 +35,7 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 // Find blob (using its ID) in a partition
 // return True if found
 func FindBlob(blobID string, partition *ds.Partition) bool {
-	for blob := range partition.BlobList {
+	for _, blob := range partition.BlobList {
 		if blobID == blob.BlobID {
 			return true
 		}
@@ -49,13 +50,13 @@ func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 		err := errors.New("Cannot merge two different partitions (with different IDs)")
 		log.Fatal(err)
 	}
-	for blob := range p2.BlobList {
-		if !FindBlob(blob.BlobID, *p1) {
+	for _, blob := range p2.BlobList {
+		if !FindBlob(blob.BlobID, p1) {
 			p1.AppendBlob(blob)
 		}
 	}
-	for blob := range p1.BlobList {
-		if !FindBlob(blob.BlobID, *p2) {
+	for _, blob := range p1.BlobList {
+		if !FindBlob(blob.BlobID, p2) {
 			p2.AppendBlob(blob)
 		}
 	}
