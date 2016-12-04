@@ -15,11 +15,13 @@ import (
 )
 
 const (
-	DCID             string        = "DC_1"                  // Id of current DC
+	DCID             string        = config.DC1              // Id of current DC
 	numDC            int           = config.NumDC            // total number of DCs
 	MaxPartitionSize float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
 	storage_log      string        = config.StorageFilename  // file path that logs the storage
 	logInterval      time.Duration = config.LogTimeInterval  // time interval to log storage
+	repServInterval  time.Duration = time.Second * 10        // time interval to scan partitions and decide whether to populate the partition to other datacenter
+	readThreshold    uint64        = 5                       // Threshold number for read to trigger populating
 )
 
 type (
@@ -27,6 +29,8 @@ type (
 )
 
 var (
+	// Routing
+	IPMap config.ServerIPMap
 	// Cluster map data structures
 	ReplicaMap = make(map[string]*ds.PartitionState)
 
@@ -39,6 +43,7 @@ var (
 )
 
 // Persist storage into a log file
+// TODO: add locking
 func persistStorage(table *map[string]*ds.Partition) {
 	// Periodically log storage
 	t := time.NewTicker(logInterval)
@@ -112,12 +117,13 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 			}
 		}
 
-		if len(partitionID) == 0 { // If all partitions are full create a new one
+		if len(partitionID) == 0 {
+			// If all partitions are full create a new one
 			partitionID, err = util.NewUUID()
 			if err != nil {
 				log.Fatal(err)
 			}
-			// Create new entries in  storage table
+			// Create new entries in storage table
 			storageTable[partitionID] = &(ds.Partition{partitionID, []ds.Blob{{blobUUID, content, size, now}}, now, size})
 			// Crete new entries in replica map and read map
 			ReadMap[partitionID] = &(ds.NumRead{0, 0})
@@ -182,6 +188,26 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	return nil
 }
 
+func HandleReplicating() {
+	t := time.NewTicker(repServInterval)
+	for {
+		// Scan read map
+		// TODO: add fine grained locking here
+		for _, count := range ReadMap {
+			if count.LocalRead >= readThreshold {
+				// Creating new thread handling populating asynchronously
+				//for
+				//go func() {
+				//client, err := rpc.Dial("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
+				//}()
+			}
+		}
+
+		<-t.C
+	}
+
+}
+
 func init() {
 	// Log settings
 	log.SetFormatter(&log.JSONFormatter{})
@@ -201,6 +227,8 @@ func init() {
 	log.SetOutput(f)
 	// Setup locking
 	rcLock.CreateLockMap(&ReadMap)
+	// Setup routing
+	IPMap.CreateIPMap()
 }
 
 // Server main loop
@@ -211,7 +239,7 @@ func main() {
 	go persistStorage(&storageTable)
 
 	// Main loop
-	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:42586")
+	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:"+config.SERVER1_PORT1)
 	if err != nil {
 		log.Fatal(err)
 	}

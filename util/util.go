@@ -61,3 +61,8 @@ func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 		}
 	}
 }
+
+func FindPartition(partitionID string, m *map[string]*ds.PartitionState) bool {
+	_, ok := (*m)[partitionID]
+	return ok
+}

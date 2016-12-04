@@ -23,7 +23,7 @@ func handleError(partitionID string) {
 // Constructor (according to Storage Map
 // Called when cluster manager initializing
 func (s *ReadCountLockMap) CreateLockMap(readMap *map[string]*ds.NumRead) {
-	(*s) = make(map[string]*sync.RWMutex) // Construct lock map, otherwise it's nil
+	*s = make(map[string]*sync.RWMutex) // Construct lock map, otherwise it's nil
 	for partitionID, _ := range *readMap {
 		(*s)[partitionID] = new(sync.RWMutex)
 	}
@@ -31,38 +31,38 @@ func (s *ReadCountLockMap) CreateLockMap(readMap *map[string]*ds.NumRead) {
 
 // Add a new entry in lock map
 // Could be used when creating a new partition
-func (s *ReadCountLockMap) AddEntry(newPartitionID string) {
-	(*s)[newPartitionID] = new(sync.RWMutex)
+func (s ReadCountLockMap) AddEntry(newPartitionID string) {
+	s[newPartitionID] = new(sync.RWMutex)
 }
 
 // Reader lock
-func (s *ReadCountLockMap) RLock(partitionID string) {
-	if _, ok := (*s)[partitionID]; !ok {
+func (s ReadCountLockMap) RLock(partitionID string) {
+	if _, ok := s[partitionID]; !ok {
 		handleError(partitionID)
 	}
-	(*s)[partitionID].RLock()
+	s[partitionID].RLock()
 }
 
 // Reader unlock
-func (s *ReadCountLockMap) RUnlock(partitionID string) {
-	if _, ok := (*s)[partitionID]; !ok {
+func (s ReadCountLockMap) RUnlock(partitionID string) {
+	if _, ok := s[partitionID]; !ok {
 		handleError(partitionID)
 	}
-	(*s)[partitionID].RUnlock()
+	s[partitionID].RUnlock()
 }
 
 // Writer lock
-func (s *ReadCountLockMap) WLock(partitionID string) {
-	if _, ok := (*s)[partitionID]; !ok {
+func (s ReadCountLockMap) WLock(partitionID string) {
+	if _, ok := s[partitionID]; !ok {
 		handleError(partitionID)
 	}
-	(*s)[partitionID].Lock()
+	s[partitionID].Lock()
 }
 
 // Writer unlock
-func (s *ReadCountLockMap) WUnlock(partitionID string) {
-	if _, ok := (*s)[partitionID]; !ok {
+func (s ReadCountLockMap) WUnlock(partitionID string) {
+	if _, ok := s[partitionID]; !ok {
 		handleError(partitionID)
 	}
-	(*s)[partitionID].Unlock()
+	s[partitionID].Unlock()
 }

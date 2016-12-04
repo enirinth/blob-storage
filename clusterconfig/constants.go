@@ -7,6 +7,9 @@ import (
 // Cluster configuration
 const (
 	NumDC            int           = 3
+	DC1              string        = "1"
+	DC2              string        = "2"
+	DC3              string        = "3"
 	MaxPartitionSize float64       = 10
 	StorageFilename  string        = "storage_log"
 	LogTimeInterval  time.Duration = time.Minute * 10
@@ -14,12 +17,31 @@ const (
 
 // Networking configuration
 const (
-	SERVER_IP1   string = "0.0.0.0"
-	SERVER_Port1 string = "42001"
+	SERVER1_IP    string = "0.0.0.0"
+	SERVER1_PORT1 string = "42011"
+	SERVER1_PORT2 string = "42012"
 
-	SERVER_IP2   string = "0.0.0.0"
-	SERVER_Port2 string = "42002"
+	SERVER2_IP    string = "0.0.0.0"
+	SERVER2_PORT1 string = "42021"
+	SERVER2_PORT2 string = "42022"
 
-	SERVER_IP3   string = "0.0.0.0"
-	SERVER_Port3 string = "42003"
+	SERVER3_IP    string = "0.0.0.0"
+	SERVER3_PORT1 string = "42031"
+	SERVER3_PORT2 string = "42032"
 )
+
+type ServerIPAddr struct {
+	ServerIP   string
+	ServerPort string
+}
+
+type ServerIPMap map[string]ServerIPAddr
+
+// When scales to more servers, need to add more entries here
+func (m *ServerIPMap) CreateIPMap() {
+	*m = ServerIPMap{
+		"1": ServerIPAddr{SERVER1_IP, SERVER1_PORT1},
+		"2": ServerIPAddr{SERVER2_IP, SERVER2_PORT1},
+		"3": ServerIPAddr{SERVER3_IP, SERVER3_PORT1},
+	}
+}
