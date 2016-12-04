@@ -32,6 +32,16 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 	}
 }
 
+// Find if a certain DC stores a certain partition
+func FindDC(dcID string, pState *ds.PartitionState) bool {
+	for _, id := range (*pState).DCList {
+		if id == dcID {
+			return true
+		}
+	}
+	return false
+}
+
 // Find blob (using its ID) in a partition
 // return True if found
 func FindBlob(blobID string, partition *ds.Partition) bool {

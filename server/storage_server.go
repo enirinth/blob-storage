@@ -188,24 +188,47 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	return nil
 }
 
-func HandleReplicating() {
+// Populate one partition to all DCs
+// Periodically scan read-count map and make decisiions independently
+func sendReplica() {
 	t := time.NewTicker(repServInterval)
 	for {
 		// Scan read map
 		// TODO: add fine grained locking here
-		for _, count := range ReadMap {
+		for partitionID, count := range ReadMap {
 			if count.LocalRead >= readThreshold {
-				// Creating new thread handling populating asynchronously
-				//for
-				//go func() {
-				//client, err := rpc.Dial("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
-				//}()
+				// Send partition to all other  DC
+				for dcID, ipAddr := range IPMap {
+					// Only send to DC that haven't got this partition/replica
+					if dcID != DCID && !util.FindDC(dcID, ReplicaMap[partitionID]) {
+						go func(serverIP string, serverPort string, pID string) {
+							client, err := rpc.Dial("tcp", serverIP+":"+serverPort)
+							if err != nil {
+								log.Fatal(err)
+							}
+							var msg = *storageTable[pID]
+							var reply bool
+							err = client.Call("Listener.HandleIncomingReplica", msg, &reply)
+							if err != nil {
+								log.Fatal(err)
+							}
+						}(ipAddr.ServerIP, ipAddr.ServerPort, partitionID)
+					}
+				}
 			}
 		}
 
+		// One scan finishes, signals time ticker
 		<-t.C
 	}
 
+}
+
+// Add partition to local storageTable upon receiving another DC's populating request
+func (l *Listener) HandleIncomingReplica(newPartition *ds.Partition, resp *bool) error {
+	storageTable[newPartition.PartitionID] = newPartition
+	*resp = true
+	return nil
 }
 
 func init() {
@@ -237,6 +260,9 @@ func main() {
 
 	// Initiates a thread that periodically persist storage into a log file (on disk)
 	go persistStorage(&storageTable)
+
+	// Initiates populating service
+	//go sendReplica()
 
 	// Main loop
 	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:"+config.SERVER1_PORT1)
