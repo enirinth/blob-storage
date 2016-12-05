@@ -17,12 +17,13 @@ import (
 )
 
 const (
-	numDC            int           = config.NumDC            // total number of DCs
-	MaxPartitionSize float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
-	storage_log      string        = config.StorageFilename  // file path that logs the storage
-	logInterval      time.Duration = config.LogTimeInterval  // time interval to log storage
-	repServInterval  time.Duration = time.Second * 10        // time interval to scan partitions and decide whether to populate the partition to other datacenter
-	readThreshold    uint64        = 3                       // Threshold number for read to trigger populating
+	numDC               int           = config.NumDC            // total number of DCs
+	MaxPartitionSize    float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
+	storage_log         string        = config.StorageFilename  // file path that logs the storage
+	logInterval         time.Duration = config.LogTimeInterval  // time interval to log storage
+	populatingInterval  time.Duration = time.Second * 10        // time interval to scan partitions and decide whether to populate the partition to other datacenter
+	syncReplicaInterval time.Duration = time.Second * 10        //time interval to synchronize replica across DCs
+	readThreshold       uint64        = 3                       // Threshold number for read to trigger populating
 )
 
 type (
@@ -43,6 +44,7 @@ var (
 
 	// Locking
 	rcLock loclock.ReadCountLockMap // Fined-grained locking for ReadMap (read-count map)
+
 )
 
 // Persist storage into a log file
@@ -194,7 +196,7 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 // Populate one partition to all DCs
 // Periodically scan read-count map and make decisiions independently
 func populateReplica() {
-	t := time.NewTicker(repServInterval)
+	t := time.NewTicker(populatingInterval)
 	for {
 		// Scan read map
 		// TODO: add fine grained locking here
@@ -208,8 +210,7 @@ func populateReplica() {
 						go func(serverIP string, serverPort string, pID string) {
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
-								fmt.Println("Dial HTTP error in populating replica. Erro when dialing  address:")
-								fmt.Println("IP address: " + serverIP + ":" + serverPort)
+								fmt.Println("Dial HTTP error in populating replica. ")
 								log.Fatal(err)
 							}
 							var msg = *storageTable[pID]
@@ -257,6 +258,50 @@ func (l *Listener) HandleIncomingReplica(newPartition *ds.Partition, resp *bool)
 	return nil
 }
 
+// Periodic service that synchronizes paritions with the same paritionID
+// i.e. a replica set
+// TODO: fine-grained locking
+func syncReplica() {
+	t := time.NewTicker(syncReplicaInterval)
+	for {
+		// Scan replica map
+		for partitionID, partitionState := range ReplicaMap {
+			for _, id := range (*partitionState).DCList {
+				// Sync current partition with all OTHER DC(s) that store it
+				if DCID != id {
+					go func(pID string, dcID string) {
+						client, err := rpc.DialHTTP("tcp", IPMap[dcID].ServerIP+":"+IPMap[dcID].ServerPort1)
+						if err != nil {
+							fmt.Println("Dial HTTP error in sync replica.")
+							log.Fatal(err)
+						}
+						var msg = *storageTable[partitionID]
+						var reply ds.Partition
+						err = client.Call("Listener.HandleSyncReplica", msg, &reply)
+						if err != nil {
+							log.Fatal(err)
+						}
+						// Merge reply of other DCs to local partition
+						util.MergePartition(storageTable[partitionID], &reply)
+					}(partitionID, id)
+				}
+			}
+		}
+
+		<-t.C
+	}
+}
+
+// Handler that merge a incoming partiion to local replication
+// TODO: locking
+func (l *Listener) HandleSyncReplica(comingPartition *ds.Partition, resp *ds.Partition) error {
+	// Store current partition to reply
+	*resp = *storageTable[comingPartition.PartitionID]
+	// Merge current partition and incoming partition
+	util.MergePartition(comingPartition, storageTable[comingPartition.PartitionID])
+	return nil
+}
+
 func init() {
 	// Log settings
 	log.SetFormatter(&log.JSONFormatter{})
@@ -301,6 +346,9 @@ func main() {
 
 	// Initiates populating service
 	go populateReplica()
+
+	// Initiaes replica synchronization service
+	//go syncReplica()
 
 	// Main loop
 	listener := new(Listener)

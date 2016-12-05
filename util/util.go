@@ -7,6 +7,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
+	"strconv"
+)
+
+const (
+	separator string = "-----"
 )
 
 // UUid generator
@@ -28,7 +33,12 @@ func NewUUID() (string, error) {
 // Print storage table for a certain DC
 func PrintStorage(storageTable *map[string]*ds.Partition) {
 	for _, v := range *storageTable {
-		fmt.Println(*v)
+		fmt.Println("Partition with ID: " + (*v).PartitionID + " starts" + separator)
+		fmt.Println("Partition size: " + strconv.FormatFloat((*v).PartitionSize, 'f', 6, 64) + " ; partition createtimestamp: " + strconv.FormatInt((*v).CreateTimestamp, 10))
+		for _, blob := range (*v).BlobList {
+			fmt.Println(blob)
+		}
+		fmt.Println("Partition ends" + separator)
 	}
 }
 
@@ -53,7 +63,7 @@ func FindBlob(blobID string, partition *ds.Partition) bool {
 	return false
 }
 
-// Merge two partitions to one that contains (in set semantics) all the blobs
+// Merge one partition into another, so that contains (in set semantics) all the blobs
 // Happens during inter-DC synchronization
 func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 	if p1.PartitionID != p2.PartitionID {
@@ -63,11 +73,6 @@ func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 	for _, blob := range p2.BlobList {
 		if !FindBlob(blob.BlobID, p1) {
 			p1.AppendBlob(blob)
-		}
-	}
-	for _, blob := range p1.BlobList {
-		if !FindBlob(blob.BlobID, p2) {
-			p2.AppendBlob(blob)
 		}
 	}
 }
