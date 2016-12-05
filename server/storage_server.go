@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -96,100 +96,84 @@ func persistStorage(table *map[string]*ds.Partition) {
 }
 
 // Write request handler
+// This will automatically create a handling thread
 func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Parse write request, get blob info
+	content := req.Content
+	size := req.Size
+	now := time.Now().Unix()
+	blobUUID, err := util.NewUUID()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Create a new thread handling request
-	go func(req ds.WriteReq, resp *ds.WriteResp) {
-		defer wg.Done()
+	// Select the first partition that is not full (this is different from Ambry)
+	partitionID := ""
+	for id, partition := range storageTable {
+		if partition.PartitionSize+size <= MaxPartitionSize {
+			partitionID = id
+			break
+		}
+	}
 
-		// Parse write request, get blob info
-		content := req.Content
-		size := req.Size
-		now := time.Now().Unix()
-		blobUUID, err := util.NewUUID()
+	if len(partitionID) == 0 {
+		// If all partitions are full create a new one
+		partitionID, err = util.NewUUID()
 		if err != nil {
 			log.Fatal(err)
 		}
+		// Create new entries in storage table
+		storageTable[partitionID] = &(ds.Partition{partitionID, []ds.Blob{{blobUUID, content, size, now}}, now, size})
+		// Crete new entries in replica map and read map
+		ReadMap[partitionID] = &(ds.NumRead{0, 0})
+		ReplicaMap[partitionID] = &(ds.PartitionState{partitionID, []string{DCID}})
+		// Create new entries in lock map
+		rcLock.AddEntry(partitionID)
+	} else {
+		// Add blob to storageTable
+		storageTable[partitionID].AppendBlob(ds.Blob{blobUUID, content, size, now})
+		storageTable[partitionID].PartitionSize += size
+	}
 
-		// Select the first partition that is not full (this is different from Ambry)
-		partitionID := ""
-		for id, partition := range storageTable {
-			if partition.PartitionSize+size <= MaxPartitionSize {
-				partitionID = id
-				break
-			}
-		}
+	// Reply with (PartitionID, blobID) pair
+	*resp = ds.WriteResp{partitionID, blobUUID}
 
-		if len(partitionID) == 0 {
-			// If all partitions are full create a new one
-			partitionID, err = util.NewUUID()
-			if err != nil {
-				log.Fatal(err)
-			}
-			// Create new entries in storage table
-			storageTable[partitionID] = &(ds.Partition{partitionID, []ds.Blob{{blobUUID, content, size, now}}, now, size})
-			// Crete new entries in replica map and read map
-			ReadMap[partitionID] = &(ds.NumRead{0, 0})
-			ReplicaMap[partitionID] = &(ds.PartitionState{partitionID, []string{DCID}})
-			// Create new entries in lock map
-			rcLock.AddEntry(partitionID)
-		} else {
-			// Add blob to storageTable
-			storageTable[partitionID].AppendBlob(ds.Blob{blobUUID, content, size, now})
-			storageTable[partitionID].PartitionSize += size
-		}
+	// Print storage table after write
+	fmt.Println("Storage Table after update:")
+	util.PrintStorage(&storageTable)
+	fmt.Println("------")
 
-		// Reply with (PartitionID, blobID) pair
-		*resp = ds.WriteResp{partitionID, blobUUID}
-
-		// Print storage table after write
-		fmt.Println("Storage Table after update:")
-		util.PrintStorage(&storageTable)
-		fmt.Println("------")
-	}(req, resp)
-
-	wg.Wait() // wait for handler thread to finish, then return reply message
 	return nil
 }
 
 // Read request handler
+// This will automatically create a handling thread
 func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// Parse read request
+	partitionID := req.PartitionID
+	blobID := req.BlobID
 
-	// Create a new thread handling request
-	go func(req ds.ReadReq, resp *ds.ReadResp) {
-		defer wg.Done()
-
-		// Parse read request
-		partitionID := req.PartitionID
-		blobID := req.BlobID
-
-		// Look for target blob
-		if _, ok := storageTable[partitionID]; ok {
-			for _, blob := range storageTable[partitionID].BlobList {
-				if blob.BlobID == blobID {
-					*resp = ds.ReadResp{blob.Content, blob.BlobSize}
-					break
-				}
+	// Look for target blob
+	if _, ok := storageTable[partitionID]; ok {
+		for _, blob := range storageTable[partitionID].BlobList {
+			if blob.BlobID == blobID {
+				*resp = ds.ReadResp{blob.Content, blob.BlobSize}
+				break
 			}
 		}
+	}
 
-		if resp.Size != 0 {
-			// Update read count
-			rcLock.WLock(partitionID)
-			// ReadMap[partitionID].GlobalRead += 1
-			ReadMap[partitionID].LocalRead += 1
-			rcLock.WUnlock(partitionID)
-		} else {
-			// Not found
-			*resp = ds.ReadResp{"NOT_FOUND", 0}
-		}
-	}(req, resp)
+	if resp.Size != 0 {
+		// Update read count
+		rcLock.WLock(partitionID)
+		// ReadMap[partitionID].GlobalRead += 1
+		ReadMap[partitionID].LocalRead += 1
+		rcLock.WUnlock(partitionID)
+	} else {
+		// Not found
+		*resp = ds.ReadResp{"NOT_FOUND", 0}
+	}
 
-	wg.Wait()
 	return nil
 }
 
