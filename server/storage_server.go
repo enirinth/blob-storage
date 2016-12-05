@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	config "github.com/enirinth/blob-storage/clusterconfig"
@@ -8,6 +9,7 @@ import (
 	"github.com/enirinth/blob-storage/locking/loclock"
 	"github.com/enirinth/blob-storage/util"
 	"net"
+	"net/http"
 	"net/rpc"
 	"os"
 	"sync"
@@ -15,13 +17,12 @@ import (
 )
 
 const (
-	DCID             string        = config.DC1              // Id of current DC
 	numDC            int           = config.NumDC            // total number of DCs
 	MaxPartitionSize float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
 	storage_log      string        = config.StorageFilename  // file path that logs the storage
 	logInterval      time.Duration = config.LogTimeInterval  // time interval to log storage
 	repServInterval  time.Duration = time.Second * 10        // time interval to scan partitions and decide whether to populate the partition to other datacenter
-	readThreshold    uint64        = 5                       // Threshold number for read to trigger populating
+	readThreshold    uint64        = 3                       // Threshold number for read to trigger populating
 )
 
 type (
@@ -29,6 +30,8 @@ type (
 )
 
 var (
+	DCID string // ID of current DC
+
 	// Routing
 	IPMap config.ServerIPMap
 	// Cluster map data structures
@@ -190,11 +193,12 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 
 // Populate one partition to all DCs
 // Periodically scan read-count map and make decisiions independently
-func sendReplica() {
+func populateReplica() {
 	t := time.NewTicker(repServInterval)
 	for {
 		// Scan read map
 		// TODO: add fine grained locking here
+		fmt.Println("Start populating data")
 		for partitionID, count := range ReadMap {
 			if count.LocalRead >= readThreshold {
 				// Send partition to all other  DC
@@ -202,8 +206,10 @@ func sendReplica() {
 					// Only send to DC that haven't got this partition/replica
 					if dcID != DCID && !util.FindDC(dcID, ReplicaMap[partitionID]) {
 						go func(serverIP string, serverPort string, pID string) {
-							client, err := rpc.Dial("tcp", serverIP+":"+serverPort)
+							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
+								fmt.Println("Dial HTTP error in populating replica. Erro when dialing  address:")
+								fmt.Println("IP address: " + serverIP + ":" + serverPort)
 								log.Fatal(err)
 							}
 							var msg = *storageTable[pID]
@@ -212,7 +218,10 @@ func sendReplica() {
 							if err != nil {
 								log.Fatal(err)
 							}
-						}(ipAddr.ServerIP, ipAddr.ServerPort, partitionID)
+							// Update replica map after sending partition
+							ReplicaMap[partitionID].AddDC(dcID)
+							// No need to update readmap or storage table, because already have that partition (this is the sender itself)
+						}(ipAddr.ServerIP, ipAddr.ServerPort1, partitionID)
 					}
 				}
 			}
@@ -225,8 +234,25 @@ func sendReplica() {
 }
 
 // Add partition to local storageTable upon receiving another DC's populating request
+// TODO: add locking here
 func (l *Listener) HandleIncomingReplica(newPartition *ds.Partition, resp *bool) error {
+	// Add new partition to storage table
 	storageTable[newPartition.PartitionID] = newPartition
+	// Update replica map after receiving new parition
+	if _, ok := ReplicaMap[newPartition.PartitionID]; !ok {
+		// New partition not in replica map, create new entry
+		ReplicaMap[newPartition.PartitionID] = &ds.PartitionState{newPartition.PartitionID, []string{DCID}}
+	} else {
+		// New partition already in replica map, just add self-DCID to DCList
+		ReplicaMap[newPartition.PartitionID].AddDC(DCID)
+	}
+	// Add new entry in read map after receiving new partition
+	ReadMap[newPartition.PartitionID] = &ds.NumRead{0, 0}
+	// Print storage table after adding new partition
+	fmt.Println("Storage Table after receiving replica:")
+	util.PrintStorage(&storageTable)
+	fmt.Println("------")
+
 	*resp = true
 	return nil
 }
@@ -256,24 +282,33 @@ func init() {
 
 // Server main loop
 func main() {
+	// Parse DCID from command line
+	switch id := os.Args[1]; id {
+	case "1":
+		DCID = config.DC1
+	case "2":
+		DCID = config.DC2
+	case "3":
+		DCID = config.DC3
+	default:
+		log.Fatal(errors.New("Error parsing DCID from command line"))
+	}
+
 	fmt.Println("Storage server starts")
 
 	// Initiates a thread that periodically persist storage into a log file (on disk)
 	go persistStorage(&storageTable)
 
 	// Initiates populating service
-	//go sendReplica()
+	go populateReplica()
 
 	// Main loop
-	addr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:"+config.SERVER1_PORT1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	inbound, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		log.Fatal(err)
-	}
 	listener := new(Listener)
 	rpc.Register(listener)
-	rpc.Accept(inbound)
+	rpc.HandleHTTP()
+	l, e := net.Listen("tcp", ":"+IPMap[DCID].ServerPort1)
+	if e != nil {
+		log.Fatal(e)
+	}
+	http.Serve(l, nil)
 }

@@ -7,6 +7,10 @@ type PartitionState struct {
 	DCList      []string
 }
 
+func (ps *PartitionState) AddDC(dcID string) {
+	(*ps).DCList = append((*ps).DCList, dcID)
+}
+
 // Store two types of read counts
 type NumRead struct {
 	LocalRead  uint64

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	client, err := rpc.Dial("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
+	client, err := rpc.DialHTTP("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
 	if err != nil {
 		log.Fatal(err)
 	}

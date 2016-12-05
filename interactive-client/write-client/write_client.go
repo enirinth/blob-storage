@@ -13,8 +13,32 @@ import (
 	"strings"
 )
 
+var (
+	DCID string // target DCID
+	// Routing
+	IPMap config.ServerIPMap
+)
+
+func init() {
+	// Setup routing
+	IPMap.CreateIPMap()
+}
+
 func main() {
-	client, err := rpc.Dial("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
+	// Parse DCID from command line, i.e. which DC this client writes to
+	// The interactive client is only for demo and experiment purpose, thus no auto-routing
+	switch id := os.Args[1]; id {
+	case "1":
+		DCID = config.DC1
+	case "2":
+		DCID = config.DC2
+	case "3":
+		DCID = config.DC3
+	default:
+		log.Fatal(errors.New("Wrong DCID parsed from command line"))
+	}
+
+	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
 	if err != nil {
 		log.Fatal(err)
 	}
