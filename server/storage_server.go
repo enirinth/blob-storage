@@ -130,7 +130,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 		// Create new entries in lock map
 		rcLock.AddEntry(partitionID)
 	} else {
-		// Add blob to storageTable
+		// Add blob to storage table
 		storageTable[partitionID].AppendBlob(ds.Blob{blobUUID, content, size, now})
 		storageTable[partitionID].PartitionSize += size
 	}
@@ -199,7 +199,7 @@ func populateReplica() {
 							}
 							var msg = *storageTable[pID]
 							var reply bool
-							err = client.Call("Listener.HandleIncomingReplica", msg, &reply)
+							err = client.Call("Listener.ReceivePopulatingReplica", msg, &reply)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -220,7 +220,7 @@ func populateReplica() {
 
 // Add partition to local storageTable upon receiving another DC's populating request
 // TODO: add locking here
-func (l *Listener) HandleIncomingReplica(newPartition *ds.Partition, resp *bool) error {
+func (l *Listener) ReceivePopulatingReplica(newPartition *ds.Partition, resp *bool) error {
 	// Add new partition to storage table
 	storageTable[newPartition.PartitionID] = newPartition
 	// Update replica map after receiving new parition
@@ -253,7 +253,7 @@ func syncReplica() {
 			for _, id := range (*partitionState).DCList {
 				// Sync current partition with all OTHER DC(s) that store it
 				if DCID != id {
-					go func(pID string, dcID string) {
+					go func(dcID string) {
 						client, err := rpc.DialHTTP("tcp", IPMap[dcID].ServerIP+":"+IPMap[dcID].ServerPort1)
 						if err != nil {
 							fmt.Println("Dial HTTP error in sync replica.")
@@ -261,13 +261,13 @@ func syncReplica() {
 						}
 						var msg = *storageTable[partitionID]
 						var reply ds.Partition
-						err = client.Call("Listener.HandleSyncReplica", msg, &reply)
+						err = client.Call("Listener.ReceiveSyncReplica", msg, &reply)
 						if err != nil {
 							log.Fatal(err)
 						}
 						// Merge reply of other DCs to local partition
 						util.MergePartition(storageTable[partitionID], &reply)
-					}(partitionID, id)
+					}(id)
 				}
 			}
 		}
@@ -278,11 +278,16 @@ func syncReplica() {
 
 // Handler that merge a incoming partiion to local replication
 // TODO: locking
-func (l *Listener) HandleSyncReplica(comingPartition *ds.Partition, resp *ds.Partition) error {
+func (l *Listener) ReceiveSyncReplica(comingPartition *ds.Partition, resp *ds.Partition) error {
 	// Store current partition to reply
 	*resp = *storageTable[comingPartition.PartitionID]
 	// Merge current partition and incoming partition
-	util.MergePartition(comingPartition, storageTable[comingPartition.PartitionID])
+	util.MergePartition(storageTable[comingPartition.PartitionID], comingPartition)
+	// Print storage table after adding new partition
+	fmt.Println("Storage Table after reiceiving populated replica:")
+	util.PrintStorage(&storageTable)
+	fmt.Println("------")
+
 	return nil
 }
 
@@ -332,7 +337,7 @@ func main() {
 	go populateReplica()
 
 	// Initiaes replica synchronization service
-	//go syncReplica()
+	go syncReplica()
 
 	// Main loop
 	listener := new(Listener)
