@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"os"
-	//"sync"
+	"sync"
 	"time"
 )
 
@@ -148,7 +148,81 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 
 // Read request handler
 // This will automatically create a handling thread
+// For now, there is no not-found, because a later-finished thread might change resp though the first one found it
 func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
+	// Parse read request
+	partitionID := req.PartitionID
+	blobID := req.BlobID
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	// Look up in local storage
+	go func() {
+		// Look for target blob
+		if _, ok := storageTable[partitionID]; ok {
+			for _, blob := range storageTable[partitionID].BlobList {
+				if blob.BlobID == blobID {
+					*resp = ds.ReadResp{blob.Content, blob.BlobSize}
+					break
+				}
+			}
+		}
+
+		if resp.Size != 0 {
+			// Update read count
+			rcLock.WLock(partitionID)
+			// ReadMap[partitionID].GlobalRead += 1
+			ReadMap[partitionID].LocalRead += 1
+			rcLock.WUnlock(partitionID)
+			wg.Done()
+		}
+		/*
+			else {
+				// Not found
+				*resp = ds.ReadResp{"NOT_FOUND", 0}
+			}
+		*/
+	}()
+
+	// Look up in other DC(s)
+	for dcID, IPaddr := range IPMap {
+		if dcID != DCID {
+			go func(addr config.ServerIPAddr) {
+				client, err := rpc.DialHTTP("tcp", addr.ServerIP+":"+addr.ServerPort1)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				var reply ds.ReadResp
+				// Send message to other DCs, response stored in &reply
+				err = client.Call("Listener.HandleRoutedReadReq", req, &reply)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if reply.Size != 0 {
+					*resp = reply
+					wg.Done()
+				}
+				/*
+					else {
+						// Not found
+						*resp = ds.ReadResp{"NOT_FOUND", 0}
+					}
+				*/
+			}(IPaddr)
+		}
+	}
+
+	wg.Wait() // Finish as soon as result found in ANY DC
+	return nil
+}
+
+// Handle read request send from other DCs/servers (NOT clients)
+// Separated from HandleReadRequest to avoid recursive broadcast
+func (l *Listener) HandleRoutedReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
+	fmt.Println("Routed Read req!!!!!")
 	// Parse read request
 	partitionID := req.PartitionID
 	blobID := req.BlobID
@@ -184,7 +258,6 @@ func populateReplica() {
 	for {
 		// Scan read map
 		// TODO: add fine grained locking here
-		fmt.Println("Start populating data")
 		for partitionID, count := range ReadMap {
 			if count.LocalRead >= readThreshold {
 				// Send partition to all other  DC
@@ -192,6 +265,7 @@ func populateReplica() {
 					// Only send to DC that haven't got this partition/replica
 					if dcID != DCID && !util.FindDC(dcID, ReplicaMap[partitionID]) {
 						go func(serverIP string, serverPort string, pID string) {
+							fmt.Println("Start populating partition : " + partitionID)
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
 								fmt.Println("Dial HTTP error in populating replica. ")
@@ -348,4 +422,5 @@ func main() {
 		log.Fatal(e)
 	}
 	http.Serve(l, nil)
+
 }

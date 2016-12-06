@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	// TODO: select nearest DC to send request
 	client, err := rpc.DialHTTP("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
 	if err != nil {
 		log.Fatal(err)

@@ -38,7 +38,7 @@ type ServerIPAddr struct {
 
 type ServerIPMap map[string]ServerIPAddr
 
-// When scales to more servers, need to add more entries here
+// When scaled to more servers, need to also add more entries here
 func (m *ServerIPMap) CreateIPMap() {
 	*m = ServerIPMap{
 		"1": ServerIPAddr{SERVER1_IP, SERVER1_PORT1, SERVER1_PORT2},
