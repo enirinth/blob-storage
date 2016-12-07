@@ -2,9 +2,16 @@ package util
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
+	"strconv"
+)
+
+const (
+	separator string = "-----"
 )
 
 // UUid generator
@@ -26,7 +33,51 @@ func NewUUID() (string, error) {
 // Print storage table for a certain DC
 func PrintStorage(storageTable *map[string]*ds.Partition) {
 	for _, v := range *storageTable {
-		fmt.Println(*v)
+		fmt.Println("Partition with ID: " + (*v).PartitionID + " starts" + separator)
+		fmt.Println("Partition size: " + strconv.FormatFloat((*v).PartitionSize, 'f', 6, 64) + " ; partition createtimestamp: " + strconv.FormatInt((*v).CreateTimestamp, 10))
+		for _, blob := range (*v).BlobList {
+			fmt.Println(blob)
+		}
+		fmt.Println("Partition ends" + separator)
 	}
+}
 
+// Find if a certain DC stores a certain partition
+func FindDC(dcID string, pState *ds.PartitionState) bool {
+	for _, id := range (*pState).DCList {
+		if id == dcID {
+			return true
+		}
+	}
+	return false
+}
+
+// Find blob (using its ID) in a partition
+// return True if found
+func FindBlob(blobID string, partition *ds.Partition) bool {
+	for _, blob := range partition.BlobList {
+		if blobID == blob.BlobID {
+			return true
+		}
+	}
+	return false
+}
+
+// Merge one partition(p2) into another(p1), so that contains (in set semantics) all the blobs
+// Happens during inter-DC synchronization
+func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
+	if p1.PartitionID != p2.PartitionID {
+		err := errors.New("Cannot merge two different partitions (with different IDs)")
+		log.Fatal(err)
+	}
+	for _, blob := range p2.BlobList {
+		if !FindBlob(blob.BlobID, p1) {
+			p1.AppendBlob(blob)
+		}
+	}
+}
+
+func FindPartition(partitionID string, m *map[string]*ds.PartitionState) bool {
+	_, ok := (*m)[partitionID]
+	return ok
 }

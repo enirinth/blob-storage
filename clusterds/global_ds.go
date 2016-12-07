@@ -7,6 +7,10 @@ type PartitionState struct {
 	DCList      []string
 }
 
+func (ps *PartitionState) AddDC(dcID string) {
+	(*ps).DCList = append((*ps).DCList, dcID)
+}
+
 // Store two types of read counts
 type NumRead struct {
 	LocalRead  uint64
@@ -22,8 +26,8 @@ type Partition struct {
 }
 
 // Append blob to a partition ('s blob list)
-func (par *Partition) AppendBlob(b Blob) {
-	(*par).BlobList = append((*par).BlobList, b)
+func (p *Partition) AppendBlob(b Blob) {
+	(*p).BlobList = append((*p).BlobList, b)
 }
 
 // Fake blob object

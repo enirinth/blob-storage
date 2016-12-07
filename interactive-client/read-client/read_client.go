@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"log"
 	"net/rpc"
@@ -11,7 +12,8 @@ import (
 )
 
 func main() {
-	client, err := rpc.Dial("tcp", "localhost:42586")
+	// TODO: select nearest DC to send request
+	client, err := rpc.DialHTTP("tcp", config.SERVER1_IP+":"+config.SERVER1_PORT1)
 	if err != nil {
 		log.Fatal(err)
 	}
