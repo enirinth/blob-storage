@@ -63,7 +63,7 @@ func FindBlob(blobID string, partition *ds.Partition) bool {
 	return false
 }
 
-// Merge one partition(p2) into another(p1), so that contains (in set semantics) all the blobs
+// Merge one partition(p2) into another(p1), so that it(p1) contains (in set semantics) all the blobs
 // Happens during inter-DC synchronization
 func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 	if p1.PartitionID != p2.PartitionID {
@@ -73,6 +73,7 @@ func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 	for _, blob := range p2.BlobList {
 		if !FindBlob(blob.BlobID, p1) {
 			p1.AppendBlob(blob)
+			p1.PartitionSize += blob.BlobSize
 		}
 	}
 }

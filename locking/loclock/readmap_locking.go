@@ -15,7 +15,7 @@ type ReadCountLockMap map[string]*sync.RWMutex
 
 // Error when trying to lock a partition that doesn't exist
 func handleError(partitionID string) {
-	err := errors.New("PartitionID: " + partitionID + " does not exist in lock map")
+	err := errors.New("PartitionID: " + partitionID + " does not exist in lock map, cannot lock")
 	fmt.Println(err.Error())
 	log.Fatal(err)
 }
