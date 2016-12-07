@@ -21,7 +21,11 @@ def genEverything(file_names):
     out_log = "input.txt"
 
     fileSizeDist = np.random.zipf(2.0, numFiles)
-    fileSizeDist = fileSizeDist * 10.0 / max(fileSizeDist)
+    # fileSizeDist = fileSizeDist * 10.0 / max(fileSizeDist)
+    for i, v in enumerate(fileSizeDist):
+        if v > 10:
+            fileSizeDist[i] = 10
+
 
     readReqDist = np.random.zipf(2.0, numFiles)
 
