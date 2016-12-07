@@ -20,15 +20,15 @@ const (
 
 // Networking configuration
 const (
-	SERVER1_IP    string = "0.0.0.0"
+	SERVER1_IP    string = "52.209.171.220"
 	SERVER1_PORT1 string = "42011"
 	SERVER1_PORT2 string = "42012"
 
-	SERVER2_IP    string = "0.0.0.0"
+	SERVER2_IP    string = "54.221.133.142"
 	SERVER2_PORT1 string = "42021"
 	SERVER2_PORT2 string = "42022"
 
-	SERVER3_IP    string = "0.0.0.0"
+	SERVER3_IP    string = "54.153.39.155"
 	SERVER3_PORT1 string = "42031"
 	SERVER3_PORT2 string = "42032"
 )
