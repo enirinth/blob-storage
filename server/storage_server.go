@@ -17,13 +17,13 @@ import (
 )
 
 const (
-	numDC               int           = config.NumDC            // total number of DCs
-	MaxPartitionSize    float64       = config.MaxPartitionSize // maximum size of partition (excluding metadata)
-	storage_log         string        = config.StorageFilename  // file path that logs the storage
-	logInterval         time.Duration = config.LogTimeInterval  // time interval to log storage
-	populatingInterval  time.Duration = time.Second * 10        // time interval to scan partitions and decide whether to populate the partition to other datacenter
-	syncReplicaInterval time.Duration = time.Second * 10        //time interval to synchronize replica across DCs
-	readThreshold       uint64        = 3                       // Threshold number for read to trigger populating
+	numDC               int           = config.NumDC               // total number of DCs
+	MaxPartitionSize    float64       = config.MaxPartitionSize    // maximum size of partition (excluding metadata)
+	storage_log         string        = config.StorageFilename     // file path that logs the storage
+	logInterval         time.Duration = config.LogTimeInterval     // time interval to log storage
+	populatingInterval  time.Duration = config.PopulatingInterval  // time interval to scan partitions and decide whether to populate the partition to other datacenter
+	syncReplicaInterval time.Duration = config.SyncReplicaInterval //time interval to synchronize replica across DCs
+	readThreshold       uint64        = config.ReadThreshold       // Threshold number for read to trigger populating
 )
 
 type (

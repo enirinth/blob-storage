@@ -6,13 +6,16 @@ import (
 
 // Cluster configuration
 const (
-	NumDC            int           = 3
-	DC1              string        = "1"
-	DC2              string        = "2"
-	DC3              string        = "3"
-	MaxPartitionSize float64       = 10
-	StorageFilename  string        = "storage_log"
-	LogTimeInterval  time.Duration = time.Minute * 10
+	NumDC               int           = 3
+	DC1                 string        = "1"
+	DC2                 string        = "2"
+	DC3                 string        = "3"
+	MaxPartitionSize    float64       = 10
+	StorageFilename     string        = "storage_log"
+	LogTimeInterval     time.Duration = time.Minute * 10
+	ReadThreshold       uint64        = 3
+	PopulatingInterval  time.Duration = time.Second * 10
+	SyncReplicaInterval time.Duration = time.Second * 10
 )
 
 // Networking configuration
