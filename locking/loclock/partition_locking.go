@@ -1,7 +1,7 @@
 // Locking for StorageTable in cluster manager
 // There is a detailed explannation on why there is no need for rw mutex here:
 // https://docs.google.com/presentation/d/1cjpXEeILcemgNt2MFYXDgC8MdpLFgimEDZpN9zooHck/edit#slide=id.p
-// Go doesn't have a built-in atomic map, therefore it needs to be handled manually
+// Go doesn't have a built-in atomic map, so it needs to be handled manually
 package loclock
 
 import (
@@ -13,7 +13,8 @@ type StorageTableLockMap map[string]*sync.Mutex
 
 // Constructor (according to Storage Map
 // Called upon initializing of cluster manager
-func (s *StorageTableLockMap) CreateLockMap(storageTable *map[string]*ds.Partition) {
+func (s *StorageTableLockMap) CreateLockMap(
+	storageTable *map[string]*ds.Partition) {
 	*s = make(map[string]*sync.Mutex) // Construct lock map, otherwise it's nil
 	for partitionID, _ := range *storageTable {
 		(*s)[partitionID] = new(sync.Mutex)
