@@ -13,8 +13,9 @@ import (
 	"fmt"
 	"github.com/enirinth/blob-storage/util"
 )
+
 var (
-	DCID string
+	DCID  string
 	IPMap config.ServerIPMap
 )
 
@@ -72,7 +73,7 @@ func main() {
 			log.Fatal(errors.New("File size cannot be smaller or equal to zero"))
 		}
 
-        var msg = ds.WriteReq{vars[0], f}
+		var msg = ds.WriteReq{vars[0], f}
 		var reply ds.WriteResp
 
 		err = client.Call(serverCall, msg, &reply)

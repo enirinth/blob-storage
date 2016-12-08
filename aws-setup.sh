@@ -33,6 +33,7 @@ echo "export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH" >> ~/.bashrc
 
 # Get project source code (and dependencies)
 go get -u github.com/Sirupsen/logrus
+go get -u github.com/tatsushid/go-fastping
 go get -u github.com/enirinth/blob-storage
 
 # Useful utilities
