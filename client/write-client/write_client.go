@@ -20,34 +20,13 @@ var (
 )
 
 
-func Init(id string) {
-    IPMap.CreateIPMap()
-
-	switch id {
-	case "0":
-		DCID =config.DC0
-	case "1":
-		DCID = config.DC1
-	case "2":
-		DCID = config.DC2
-	case "3":
-		DCID = config.DC3
-	default:
-		log.Fatal(errors.New("Error parsing DCID from command line"))
-	}
-}
-
-
-func main() {
-	// Parse DCID from command line
+func writeBlob(address string) {
 	dcid := os.Args[1]
 	filename := os.Args[2]
 	serverCall := ""
 	outputFile := ""
 
-	Init(dcid)
-
-	if DCID == config.DC0 {
+	if dcid == config.DC0 {
 		serverCall = "Listener.HandleCentralManagerWriteRequest"
 		outputFile = "central_manager_storage.txt"
 	}else {
@@ -55,17 +34,14 @@ func main() {
 		outputFile = "out.txt"
 	}
 	lines := util.ReadFile(filename)
-
 	numFiles := len(lines) - 1
-	writeStr := ""
-	address := IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1
-	fmt.Println(numFiles, DCID, address)
 
 	client, err := rpc.DialHTTP("tcp", address)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	writeStr := ""
 	for i := 0; i < numFiles; i++ {
 		vars := strings.Split(lines[i], " ")
 		f, err := strconv.ParseFloat(vars[1], 64)
@@ -81,9 +57,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// fmt.Println(reply)
 		fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
-
 		curLineStr := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
 		writeStr += curLineStr
 	}
@@ -92,4 +66,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+
+func init() {
+    IPMap.CreateIPMap()
+}
+
+
+func main() {
+	if len(os.Args) != 3 {
+		err := errors.New("Wrong input, E.g: go run write_client.go 0 input100.txt")
+		log.Fatal(err)
+	}
+	dc := os.Args[1]
+	address := IPMap[dc].ServerIP + ":" + IPMap[dc].ServerPort1
+	fmt.Println(address)
+	writeBlob(address)
 }
