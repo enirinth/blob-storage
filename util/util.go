@@ -53,7 +53,7 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 		line := (*v).PartitionID + "\t"
 		tmp := ""
 		for _, blob := range (*v).BlobList {
-			tmp += "{" + blob.Content + ", " + strconv.FormatFloat(blob.BlobSize, 'f', 6, 64) + "}, "
+			tmp += "{" + blob.BlobID + ", " + strconv.FormatFloat(blob.BlobSize, 'f', 6, 64) + "}, "
 		}
 		line += tmp + "\t"
 		line += strconv.FormatFloat((*v).PartitionSize, 'f', 6, 64) + "\t"
