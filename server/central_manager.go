@@ -49,7 +49,6 @@ var (
 
 
 func (l *Listener) HandleCentralManagerReadRequest(req ds.ReadReq, resp *ds.CentralManagerReadResp) error{
-	fmt.Println(req)
 	partitionID := req.PartitionID
 	blobID := req.BlobID
 
@@ -73,6 +72,7 @@ func (l *Listener) HandleCentralManagerReadRequest(req ds.ReadReq, resp *ds.Cent
 		//rcLock.WUnlock(partitionID)
 		//wg.Done()
 	}
+	fmt.Println("read: ", req)
 	return nil
 }
 
@@ -131,13 +131,10 @@ func (l *Listener) HandleCentralManagerWriteRequest(req ds.WriteReq, resp *ds.Wr
 }
 
 
-func showTableInfo (name string) {
-	switch name {
-	case "cluster":
-		util.PrintCluster(&ReplicaMap, &ReadMap)
-	case "storage":
-		util.PrintStorage(&storageTable)
-	}
+func (l *Listener) HandleCentralManagerShowStatus(req string, resp *string) error{
+	util.PrintCluster(&ReplicaMap, &ReadMap)
+	util.PrintStorage(&storageTable)
+	return nil
 }
 
 
