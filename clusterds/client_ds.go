@@ -25,3 +25,19 @@ type ReadResp struct {
 	Content string
 	Size    float64
 }
+
+// Read response from central manager, return DC location for that blob
+type CentralManagerReadResp struct {
+	Address     string
+	Size        float64
+}
+
+type CentralDCReadReq struct {
+	PartitionID string
+	BlobID      string
+	Size        float64
+}
+
+type CentralDCReadResp struct {
+	Content  string
+}
