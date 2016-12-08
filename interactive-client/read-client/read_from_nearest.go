@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
@@ -10,7 +9,6 @@ import (
 	"log"
 	"net/rpc"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -26,10 +24,11 @@ func init() {
 }
 
 func main() {
-	// Find the nearest (smallest latency)  DC/server to write to
+	// Select nearest DC to send request
 	DCID = routing.NearestDC()
 	client, err := rpc.DialHTTP(
 		"tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,24 +41,19 @@ func main() {
 			log.Fatal(err)
 		}
 		words := strings.Fields(line)
-		size, err := strconv.ParseFloat(words[1], 64)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if size <= 0 {
-			log.Fatal(errors.New("File size cannot be smaller or equal to zero"))
-		}
-		content := words[0]
+		partitionID := words[0]
+		blobID := words[1]
 
 		// Pack message from stdin to WriteReq, initiates struct to get response
-		var msg = ds.WriteReq{content, size}
-		var reply ds.WriteResp
+		var msg = ds.ReadReq{partitionID, blobID}
+		var reply ds.ReadResp
 
 		// Send message to storage server, response stored in &reply
-		err = client.Call("Listener.HandleWriteReq", msg, &reply)
+		err = client.Call("Listener.HandleReadReq", msg, &reply)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(reply)
 	}
+
 }
