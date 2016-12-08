@@ -1,10 +1,7 @@
 package main
 
-/// <partition_id, blob_id, rd_access>
-
 import (
 	"errors"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
@@ -13,52 +10,60 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"fmt"
+	"github.com/enirinth/blob-storage/util"
 )
 var (
 	DCID string
 	IPMap config.ServerIPMap
 )
 
-func readFile() []string {
-	dat, err := ioutil.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal(err)
+
+func Init(id string) {
+    IPMap.CreateIPMap()
+
+	switch id {
+	case "0":
+		DCID =config.DC0
+	case "1":
+		DCID = config.DC1
+	case "2":
+		DCID = config.DC2
+	case "3":
+		DCID = config.DC3
+	default:
+		log.Fatal(errors.New("Error parsing DCID from command line"))
 	}
-	lines := strings.Split(string(dat), "\n")
-	return lines
 }
 
-func init() {
-    IPMap.CreateIPMap()
-}
 
 func main() {
+	// Parse DCID from command line
+	dcid := os.Args[1]
+	filename := os.Args[2]
+	serverCall := ""
+	outputFile := ""
 
-    // Parse DCID from command line
-    switch id := os.Args[1]; id {
-    case "1":
-        DCID = config.DC1
-    case "2":
-        DCID = config.DC2
-    case "3":
-        DCID = config.DC3
-    default:
-        log.Fatal(errors.New("Error parsing DCID from command line"))
-    }
+	Init(dcid)
 
-    client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
-	//client, err := rpc.Dial("tcp", "localhost:42011")
-	if err != nil {
-        //fmt.Print("HERE\n")
-		log.Fatal(err)
+	if DCID == config.DC0 {
+		serverCall = "Listener.HandleCentralManagerWriteRequest"
+		outputFile = "central_manager_storage.txt"
+	}else {
+		serverCall = "Listener.HandleWriteReq"
+		outputFile = "out.txt"
 	}
-	/// Declare Write ID File
-
-	/// Read Write Text File
-	lines := readFile()
+	lines := util.ReadFile(filename)
 
 	numFiles := len(lines) - 1
-	write_str := ""
+	writeStr := ""
+	address := IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1
+	fmt.Println(numFiles, DCID, address)
+
+	client, err := rpc.DialHTTP("tcp", address)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for i := 0; i < numFiles; i++ {
 		vars := strings.Split(lines[i], " ")
@@ -70,9 +75,7 @@ func main() {
         var msg = ds.WriteReq{vars[0], f}
 		var reply ds.WriteResp
 
-        //fmt.Print(msg.partitionID, msg.blobID)
-
-		err = client.Call("Listener.HandleWriteReq", msg, &reply)
+		err = client.Call(serverCall, msg, &reply)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,13 +83,12 @@ func main() {
 		// fmt.Println(reply)
 		fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
 
-		cur_line_str := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
-		write_str += cur_line_str
+		curLineStr := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
+		writeStr += curLineStr
 	}
-	d1 := []byte(write_str)
-	err = ioutil.WriteFile("../read-client/out.txt", d1, 0644)
+	d1 := []byte(writeStr)
+	err = ioutil.WriteFile("../read-client/" + outputFile, d1, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
