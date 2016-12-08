@@ -14,13 +14,14 @@ import (
 	"strconv"
 	"strings"
 )
+
 var (
-	DCID string
+	DCID  string
 	IPMap config.ServerIPMap
 )
 
 func readFile() []string {
-	dat, err := ioutil.ReadFile("input.txt")
+	dat, err := ioutil.ReadFile("input100.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,27 +30,27 @@ func readFile() []string {
 }
 
 func init() {
-    IPMap.CreateIPMap()
+	IPMap.CreateIPMap()
 }
 
 func main() {
 
-    // Parse DCID from command line
-    switch id := os.Args[1]; id {
-    case "1":
-        DCID = config.DC1
-    case "2":
-        DCID = config.DC2
-    case "3":
-        DCID = config.DC3
-    default:
-        log.Fatal(errors.New("Error parsing DCID from command line"))
-    }
+	// Parse DCID from command line
+	switch id := os.Args[1]; id {
+	case "1":
+		DCID = config.DC1
+	case "2":
+		DCID = config.DC2
+	case "3":
+		DCID = config.DC3
+	default:
+		log.Fatal(errors.New("Error parsing DCID from command line"))
+	}
 
-    client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
+	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
 	//client, err := rpc.Dial("tcp", "localhost:42011")
 	if err != nil {
-        //fmt.Print("HERE\n")
+		//fmt.Print("HERE\n")
 		log.Fatal(err)
 	}
 	/// Declare Write ID File
@@ -67,10 +68,10 @@ func main() {
 			log.Fatal(errors.New("File size cannot be smaller or equal to zero"))
 		}
 
-        var msg = ds.WriteReq{vars[0], f}
+		var msg = ds.WriteReq{vars[0], f}
 		var reply ds.WriteResp
 
-        //fmt.Print(msg.partitionID, msg.blobID)
+		//fmt.Print(msg.partitionID, msg.blobID)
 
 		err = client.Call("Listener.HandleWriteReq", msg, &reply)
 		if err != nil {
