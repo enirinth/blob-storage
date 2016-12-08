@@ -72,7 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 	port := IPMap[DCID].ServerPort1
-	fmt.Println("Storage server starts:", IPMap[DCID].ServerIP +":" + port)
+	fmt.Println("Storage server starts:", DCID, ", ", IPMap[DCID].ServerIP +":" + port)
 
 	listener := new(Listener)
 	rpc.Register(listener)
