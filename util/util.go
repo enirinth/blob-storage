@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"strings"
 	mrand "math/rand"
+	"text/tabwriter"
 )
 
 const (
@@ -44,25 +45,42 @@ func NewUUID() (string, error) {
 
 // Print storage table for a certain DC
 func PrintStorage(storageTable *map[string]*ds.Partition) {
+	fmt.Println("#### Storage Map ###")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
+	fmt.Fprintln(w, "PartitionID\tBlob List\tPartition Size\tTimestamp")
+
 	for _, v := range *storageTable {
-		fmt.Println("Partition with ID: " + (*v).PartitionID + " starts" + separator)
-		fmt.Println("Partition size: " + strconv.FormatFloat((*v).PartitionSize, 'f', 6, 64) + " ; partition createtimestamp: " + strconv.FormatInt((*v).CreateTimestamp, 10))
+		line := (*v).PartitionID + "\t"
+		tmp := ""
 		for _, blob := range (*v).BlobList {
-			fmt.Println(blob)
+			tmp += "{" + blob.Content + ", " + strconv.FormatFloat(blob.BlobSize, 'f', 6, 64) + "}, "
 		}
-		fmt.Println("Partition ends" + separator)
+		line += tmp + "\t"
+		line += strconv.FormatFloat((*v).PartitionSize, 'f', 6, 64) + "\t"
+		line += strconv.FormatInt((*v).CreateTimestamp, 10)
+		fmt.Fprintln(w, line)
 	}
+	w.Flush()
 }
 
 func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string]*ds.NumRead){
+	fmt.Println("### Cluster Map ###")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
+	fmt.Fprintln(w, "PartitionID\tDC List\tlocal Read\tGlobal Read\t")
+
 	for partitionID, DCs := range *ReplicaMap {
-		fmt.Println("Partition with ID: " + DCs.PartitionID + " starts" + separator)
-		for DCName := range DCs.DCList {
-			fmt.Print(DCName, ", ")
+		line := partitionID + "\t"
+		tmp := ""
+		for _, name := range DCs.DCList {
+			tmp += name + ","
 		}
-		fmt.Println("local read:", (*ReadMap)[partitionID].LocalRead, ", global read:", (*ReadMap)[partitionID].GlobalRead)
-		fmt.Println("Partition ends" + separator)
+		line += tmp + "\t"
+		lRead := (*ReadMap)[partitionID].LocalRead
+		gRead := (*ReadMap)[partitionID].GlobalRead
+		line += strconv.Itoa(int(lRead)) + "\t" + strconv.Itoa(int(gRead)) + "\t"
+		fmt.Fprintln(w, line)
 	}
+	w.Flush()
 }
 
 func ReadFile(filename string) []string {
