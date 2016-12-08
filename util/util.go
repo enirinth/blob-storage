@@ -8,6 +8,10 @@ import (
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
 	"strconv"
+	"os"
+	"io/ioutil"
+	"strings"
+	mrand "math/rand"
 )
 
 const (
@@ -41,6 +45,42 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 		fmt.Println("Partition ends" + separator)
 	}
 }
+
+func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string]*ds.NumRead){
+	for partitionID, DCs := range *ReplicaMap {
+		fmt.Println("Partition with ID: " + DCs.PartitionID + " starts" + separator)
+		for DCName := range DCs.DCList {
+			fmt.Print(DCName, ", ")
+		}
+		fmt.Println("local read:", (*ReadMap)[partitionID].LocalRead, ", global read:", (*ReadMap)[partitionID].GlobalRead)
+		fmt.Println("Partition ends" + separator)
+	}
+}
+
+func ReadFile(filename string) []string {
+	fmt.Println(os.Getwd())
+	dat, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(dat), "\n")
+	return lines
+}
+
+
+// pick a random number from [0, numDC); return the dc name as string
+func GetRandomDC(numDC int) string{
+	random := mrand.Intn(numDC)
+	return strconv.Itoa(random + 1)
+}
+
+
+// pick a random DC from the DCList; return the dc name as string
+func GetRandomDCFromList(dcList []string) string {
+	random := mrand.Intn(len(dcList))
+	return dcList[random]
+}
+
 
 // Find if a certain DC stores a certain partition
 func FindDC(dcID string, pState *ds.PartitionState) bool {
