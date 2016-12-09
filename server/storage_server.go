@@ -289,7 +289,12 @@ func populateReplica() {
 							// Copy partition to message struct to be sent
 							stLock.Lock(pID)
 							var msg = *storageTable[pID]
+							partitionSize := storageTable[pID].PartitionSize
 							stLock.Unlock(pID)
+
+							// Simualte transfer latency
+							util.MockTransLatency(DCID, dID, partitionSize)
+
 							var reply bool
 							err = client.Call(
 								"Listener.ReceivePopulatingReplica", msg, &reply)
@@ -465,13 +470,19 @@ func main() {
 	fmt.Println("Storage server starts")
 
 	// Initiates a thread that periodically persist storage on disk
-	go persistStorage(&storageTable)
+	if config.LogServiceOn {
+		go persistStorage(&storageTable)
+	}
 
 	// Initiates populating service
-	go populateReplica()
+	if config.PopulateServiceOn {
+		go populateReplica()
+	}
 
 	// Initiaes replica synchronization service
-	go syncReplica()
+	if config.SyncServiceOn {
+		go syncReplica()
+	}
 
 	// Main loop
 	listener := new(Listener)

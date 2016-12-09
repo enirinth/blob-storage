@@ -7,7 +7,7 @@ import (
 // Cluster configuration
 const (
 	NumDC               int           = 3
-	DC0   		        string        = "0"      // centralized manager
+	DC0                 string        = "0" // centralized manager
 	DC1                 string        = "1"
 	DC2                 string        = "2"
 	DC3                 string        = "3"
@@ -17,13 +17,16 @@ const (
 	ReadThreshold       uint64        = 3
 	PopulatingInterval  time.Duration = time.Second * 10
 	SyncReplicaInterval time.Duration = time.Second * 10
+	LogServiceOn        bool          = false
+	PopulateServiceOn   bool          = true
+	SyncServiceOn       bool          = true
 )
 
 // Networking configuration
 const (
-	SERVER0_IP      string = "0.0.0.0"
-	SERVER0_PORT1   string = "41001"
-	SERVER0_PORT2   string = "41002"
+	SERVER0_IP    string = "0.0.0.0"
+	SERVER0_PORT1 string = "41001"
+	SERVER0_PORT2 string = "41002"
 
 	SERVER1_IP    string = "52.209.171.220"
 	SERVER1_PORT1 string = "41011"
