@@ -64,12 +64,6 @@ func NearestDC() string {
 }
 
 
-// generate shell command string for traffic control
-func getTCCmdStr(latency int)  string{
-	cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
-	return cmd
-}
-
 // execute shell command
 func execCmd(cmdStr string) string {
 	parts := strings.Fields(cmdStr)
@@ -87,20 +81,39 @@ func execCmd(cmdStr string) string {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return " "
 	}
-	fmt.Println("Result: " + out.String())
+	fmt.Println("### Result ###")
+	fmt.Print(out.String())
 	return out.String()
 }
 
 // remove current traffic control setting on eth0
 func ClearTC() {
-	cmd := "sudo tc qdisc delete dev eth0 root netem"
+	cmd := "sudo tc qdisc delete dev eth0 root"
+	execCmd(cmd)
+}
+
+// show current traffic control setting
+func ShowTC() {
+	cmd := "tc qdisc show"
 	execCmd(cmd)
 }
 
 // put latency on linux network card, eth0
-func ChangeTC(latency int) {
-	cmd := getTCCmdStr(latency)
-	fmt.Println("update: ", cmd)
+func ChangeLatency(latency string) {
 	ClearTC()
+
+	cmd := "sudo tc qdisc add dev eth0 root netem delay " + latency + "ms"
+	fmt.Println("update: ", cmd)
+	execCmd(cmd)
+}
+
+// use tbf(token bucket filter) to change the throughput, setting bandwidth=rate, and short time max=burst,
+// drop packages when wait time longer than latency
+func ChangeBandwidth(rate string, burst string, latency string) {
+	ClearTC()
+
+	cmd := "sudo tc qdisc add dev eth0 root tbf rate "
+	cmd += rate + "kbit burst " + burst + "kbit latency " + latency + "ms"
+	fmt.Println(cmd)
 	execCmd(cmd)
 }
