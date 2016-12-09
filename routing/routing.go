@@ -9,6 +9,9 @@ import (
 	"net"
 	"strconv"
 	"time"
+	"strings"
+	"os/exec"
+	"bytes"
 )
 
 // Ping ip adress (ICMP), get response time
@@ -58,4 +61,46 @@ func NearestDC() string {
 	}
 	fmt.Println("DC " + dcID + " is the nearest DC, to which all requests will be sent")
 	return dcID
+}
+
+
+// generate shell command string for traffic control
+func getTCCmdStr(latency int)  string{
+	cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
+	return cmd
+}
+
+// execute shell command
+func execCmd(cmdStr string) string {
+	parts := strings.Fields(cmdStr)
+	head := parts[0]
+	parts = parts[1:]
+
+	cmd := exec.Command(head, parts...)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return " "
+	}
+	fmt.Println("Result: " + out.String())
+	return out.String()
+}
+
+// remove current traffic control setting
+func clearTC() {
+	cmd := "sudo tc qdisc delete dev lo root netem"
+	execCmd(cmd)
+}
+
+// put latency on linux network card, eth0
+func ChangeTC(latency int) {
+	cmd := getTCCmdStr(latency)
+	fmt.Println("update: ", cmd)
+	clearTC()
+	execCmd(cmd)
 }
