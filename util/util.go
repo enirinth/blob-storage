@@ -7,12 +7,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
-	"strconv"
-	"os"
 	"io/ioutil"
-	"strings"
 	mrand "math/rand"
+	"os"
+	"strconv"
+	"strings"
 	"text/tabwriter"
+	"time"
 )
 
 const (
@@ -63,7 +64,7 @@ func PrintStorage(storageTable *map[string]*ds.Partition) {
 	w.Flush()
 }
 
-func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string]*ds.NumRead){
+func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string]*ds.NumRead) {
 	fmt.Println("### Cluster Map ###")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
 	fmt.Fprintln(w, "PartitionID\tDC List\tlocal Read\tGlobal Read\t")
@@ -93,20 +94,17 @@ func ReadFile(filename string) []string {
 	return lines
 }
 
-
 // pick a random number from [0, numDC); return the dc name as string
-func GetRandomDC(numDC int) string{
+func GetRandomDC(numDC int) string {
 	random := mrand.Intn(numDC)
 	return strconv.Itoa(random + 1)
 }
-
 
 // pick a random DC from the DCList; return the dc name as string
 func GetRandomDCFromList(dcList []string) string {
 	random := mrand.Intn(len(dcList))
 	return dcList[random]
 }
-
 
 // Find if a certain DC stores a certain partition
 func FindDC(dcID string, pState *ds.PartitionState) bool {
@@ -144,7 +142,36 @@ func MergePartition(p1 *ds.Partition, p2 *ds.Partition) {
 	}
 }
 
+// Returns the size of (total) difference of two partitions
+// e.g. p1:blob1 blob2, p2: blob1 blob3; will return the size of blob2+blob3
+func DeltaSize(p1 *ds.Partition, p2 *ds.Partition) float64 {
+	if p1.PartitionID != p2.PartitionID {
+		err := errors.New("Cannot calculate delta size of two different " +
+			"partitions (with different IDs)")
+		log.Fatal(err)
+	}
+	var deltaSize float64 = 0
+	for _, blob := range p1.BlobList {
+		if !FindBlob(blob.BlobID, p2) {
+			deltaSize += blob.BlobSize
+		}
+	}
+	for _, blob := range p2.BlobList {
+		if !FindBlob(blob.BlobID, p1) {
+			deltaSize += blob.BlobSize
+		}
+	}
+	return deltaSize
+}
+
+// Find partition in a ReplicaMap
 func FindPartition(partitionID string, m *map[string]*ds.PartitionState) bool {
 	_, ok := (*m)[partitionID]
 	return ok
+}
+
+// Simulate end-to-end latency of transfering a file
+func MockTransLatency(dcID1 string, dcID2 string, size float64) {
+	// TODO: put regression result here
+	time.Sleep(time.Second * 0)
 }

@@ -375,6 +375,13 @@ func syncReplica() {
 						if err != nil {
 							log.Fatal(err)
 						}
+
+						// Simualte transfer latency
+						stLock.Lock(partitionID)
+						deltaSize := util.DeltaSize(storageTable[partitionID], &reply)
+						stLock.Unlock(partitionID)
+						util.MockTransLatency(DCID, dcID, deltaSize)
+
 						// Merge reply of other DCs to local partition
 						stLock.Lock(partitionID)
 						util.MergePartition(storageTable[partitionID], &reply)
