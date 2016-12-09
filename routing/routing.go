@@ -91,9 +91,9 @@ func execCmd(cmdStr string) string {
 	return out.String()
 }
 
-// remove current traffic control setting
-func clearTC() {
-	cmd := "sudo tc qdisc delete dev lo root netem"
+// remove current traffic control setting on eth0
+func ClearTC() {
+	cmd := "sudo tc qdisc delete dev eth0 root netem"
 	execCmd(cmd)
 }
 
@@ -101,6 +101,6 @@ func clearTC() {
 func ChangeTC(latency int) {
 	cmd := getTCCmdStr(latency)
 	fmt.Println("update: ", cmd)
-	clearTC()
+	ClearTC()
 	execCmd(cmd)
 }
