@@ -20,6 +20,7 @@ const (
 	LogServiceOn        bool          = false
 	PopulateServiceOn   bool          = true
 	SyncServiceOn       bool          = true
+	PrintServiceON      bool          = true
 )
 
 // Networking configuration

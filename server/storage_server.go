@@ -152,9 +152,11 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	*resp = ds.WriteResp{partitionID, blobUUID}
 
 	// Print storage table after write
-	fmt.Println("Storage Table after update:")
-	util.PrintStorage(&storageTable)
-	fmt.Println("------")
+	if config.PrintServiceON {
+		fmt.Println("Storage Table after update:")
+		util.PrintStorage(&storageTable)
+		fmt.Println("------")
+	}
 
 	return nil
 }
