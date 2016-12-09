@@ -152,7 +152,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	*resp = ds.WriteResp{partitionID, blobUUID}
 
 	// Print storage table after write
-	if config.PrintServiceON {
+	if config.PrintServiceOn {
 		fmt.Println("Storage Table after update:")
 		util.PrintStorage(&storageTable)
 		fmt.Println("------")
@@ -273,9 +273,10 @@ func populateReplica() {
 	t := time.NewTicker(populatingInterval)
 	for {
 		// Scan read map
-		// TODO: add fine grained locking here
 		for partitionID, count := range ReadMap {
-			if count.LocalRead >= readThreshold {
+			// Copy hot partitions
+			// If copy-everywhere policy is turned on, always copy to all other DCs
+			if count.LocalRead >= readThreshold || config.CopyEveryWhereOn {
 				// Send partition to all other  DC
 				for dcID, ipAddr := range IPMap {
 					// Only send to DC that haven't got this partition/replica
