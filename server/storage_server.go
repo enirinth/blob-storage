@@ -294,7 +294,7 @@ func populateReplica() {
 								"Start populating partition : " + pID + " to DC: " + dID)
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
-								fmt.Println("Dial HTTP error in populating replica. ")
+								fmt.Println("Dial HTTP error in populating replica. server: " + serverIP + " port: " + serverPort)
 								log.Fatal(err)
 							}
 							// Copy partition to message struct to be sent
