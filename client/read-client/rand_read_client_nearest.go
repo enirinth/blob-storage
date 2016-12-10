@@ -1,23 +1,22 @@
 package main
 
 import (
-	//"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
     config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
-    "github.com/enirinth/blob-storage/routing"
 	"io/ioutil"
+    "math/rand"
 	"net/rpc"
-    "os"
+    "github.com/enirinth/blob-storage/routing"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-//const numFiles int = config.readReqFiles
-const numFiles int = 10
+//const numFiles = readReqFiles
+const numFiles = 10
 
 var (
     DCID string
@@ -34,8 +33,8 @@ type info struct {
 
 // readResponses_chan := make(chan )
 
-func readFile(read_file string) [numFiles]info {
-	//read_file := "out.txt"
+func readFile(input_file string) [numFiles]info {
+	read_file := input_file
 	dat, err := ioutil.ReadFile(read_file)
 	if err != nil {
 		log.Fatal(err)
@@ -59,6 +58,7 @@ func readFile(read_file string) [numFiles]info {
 
 func sendRequest(PartitionID string, BlobID string, DCID string) {
 	defer wg.Done()
+
 	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
 	if err != nil {
 		log.Fatal(err)
@@ -69,15 +69,12 @@ func sendRequest(PartitionID string, BlobID string, DCID string) {
 	// fmt.Println(PartitionID, BlobID)
 
 	// Send message to storage server, response stored in &reply
-
-    
-
 	t0 := time.Now()
 	err = client.Call("Listener.HandleReadReq", msg, &reply)
 	t1 := time.Now()
 
 	if err != nil {
-        fmt.Print("ERROR: ", msg, "  ", reply, "  ",  err.Error(), "\n")
+        fmt.Print("ERROR: ", err.Error(), "\n")
 		log.Fatal(err)
 	}
 	fmt.Println(msg, reply, t1.Sub(t0))
@@ -92,18 +89,36 @@ func main() {
     // Select nearest DC to send request
     DCID = routing.NearestDC()
 
+    rand.Seed(time.Now().UnixNano()) // takes the current time in nanoseconds as the seed
     input_file := os.Args[1]
 	info_array := readFile(input_file)
-	fmt.Print(numFiles, "\n")
-	for i := 0; i < numFiles; i++ {
-		num_req_left := info_array[i].readReqDist
-		for num_req_left > 0 {
-			wg.Add(1)
-			go sendRequest(info_array[i].PartitionID, info_array[i].BlobID, DCID)
-			go sendRequest(info_array[i].PartitionID, info_array[i].BlobID, DCID)
-			num_req_left -= 1
-		}
-	}
-	wg.Wait()
-	//fmt.Println(test_cnt)
+
+
+    /// Create map of num => {part_id, blob_id}
+    m := make(map[int]info)
+    cnt := 0
+    for i:=0; i<len(info_array); i++ {
+        num_req_left := int(info_array[i].readReqDist)
+        for j:=0; j<num_req_left; j++ {
+            m[cnt] = info_array[i]
+            cnt += 1
+        }
+    }
+
+    /// Testing: Printing Map
+    // for key, value := range m {
+    //         fmt.Println("Key:", key, "Value:", value.PartitionID, value.BlobID)
+    // }
+
+    ///Send Requests
+    for i:=0; i<cnt; i++ {
+        randNum := rand.Intn(cnt)
+        partitionID := m[randNum].PartitionID
+        blobID := m[randNum].BlobID
+	    wg.Add(1)
+		go sendRequest(partitionID, blobID, DCID)
+        //fmt.Print(randNum, "\n")
+    }
+    wg.Wait()
+    return
 }
