@@ -22,6 +22,7 @@ const (
 	SyncServiceOn       bool          = true
 	PrintServiceOn      bool          = true
 	CopyEveryWhereOn    bool          = false
+    readReqFiles        int           = 10
 )
 
 // Networking configuration
