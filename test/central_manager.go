@@ -26,7 +26,7 @@ import (
 var (
 	wg sync.WaitGroup
 	managerAddr string
-	IPMap config.ServerIPMap    // server address and port
+	CentralIPMap config.CentralManagerIPMap
 )
 
 func sendCentralManagerPrintReq(address string, wg *sync.WaitGroup) {
@@ -193,7 +193,7 @@ func handleHelp() {
 
 
 func init() {
-	IPMap.CreateIPMap()
+	CentralIPMap.CreateIPMap()
 }
 
 
@@ -203,7 +203,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	managerAddr = IPMap[config.DC0].ServerIP + ":" + IPMap[config.DC0].ServerPort1
+	managerAddr = CentralIPMap[config.DC0].ServerIP + ":" + CentralIPMap[config.DC0].ServerPort1
 	fmt.Println(managerAddr)
 	arg := os.Args[1]
 

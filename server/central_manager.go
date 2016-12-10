@@ -36,6 +36,8 @@ var (
 
 	// Routing
 	IPMap config.ServerIPMap
+	CentralIPMap config.CentralManagerIPMap
+
 	// Cluster map data structures
 	ReplicaMap = make(map[string]*ds.PartitionState)
 
@@ -140,6 +142,7 @@ func (l *Listener) HandleCentralManagerShowStatus(req string, resp *string) erro
 
 func init() {
 	IPMap.CreateIPMap()
+	CentralIPMap.CreateIPMap()
 }
 
 
@@ -157,22 +160,13 @@ func main() {
 		err := errors.New("Need one command line argument to specify DCID")
 		log.Fatal(err)
 	}
-	switch id := os.Args[1]; id {
-	case "0":
+	if os.Args[1] == "0"{
 		DCID = config.DC0
-	case "1":
-		DCID = config.DC1
-	case "2":
-		DCID = config.DC2
-	case "3":
-		DCID = config.DC3
-	default:
-		err := errors.New( "Error parsing DCID from command line: need to be either 1 2 or 3")
-		log.Fatal(err)
+	} else {
+		log.Fatal()
 	}
 	fmt.Println("Storage server starts")
-
-	port := IPMap[DCID].ServerPort1
+	port := CentralIPMap[DCID].ServerPort1
 
 	listener := new(Listener)
 	rpc.Register(listener)

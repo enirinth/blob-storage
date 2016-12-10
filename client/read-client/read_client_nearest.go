@@ -6,18 +6,17 @@ import (
 	log "github.com/Sirupsen/logrus"
     config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
-    "github.com/enirinth/blob-storage/routing"
 	"io/ioutil"
 	"net/rpc"
-    "os"
+    //"os"
+    "github.com/enirinth/blob-storage/routing"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-//const numFiles int = config.readReqFiles
-const numFiles int = 10
+const numFiles = 10
 
 var (
     DCID string
@@ -34,8 +33,8 @@ type info struct {
 
 // readResponses_chan := make(chan )
 
-func readFile(read_file string) [numFiles]info {
-	//read_file := "out.txt"
+func readFile() [numFiles]info {
+	read_file := "out.txt"
 	dat, err := ioutil.ReadFile(read_file)
 	if err != nil {
 		log.Fatal(err)
@@ -69,15 +68,12 @@ func sendRequest(PartitionID string, BlobID string, DCID string) {
 	// fmt.Println(PartitionID, BlobID)
 
 	// Send message to storage server, response stored in &reply
-
-    
-
 	t0 := time.Now()
 	err = client.Call("Listener.HandleReadReq", msg, &reply)
 	t1 := time.Now()
 
 	if err != nil {
-        fmt.Print("ERROR: ", msg, "  ", reply, "  ",  err.Error(), "\n")
+        fmt.Print("ERROR: ", err.Error(), "\n")
 		log.Fatal(err)
 	}
 	fmt.Println(msg, reply, t1.Sub(t0))
@@ -92,14 +88,12 @@ func main() {
     // Select nearest DC to send request
     DCID = routing.NearestDC()
 
-    input_file := os.Args[1]
-	info_array := readFile(input_file)
+	info_array := readFile()
 	fmt.Print(numFiles, "\n")
 	for i := 0; i < numFiles; i++ {
 		num_req_left := info_array[i].readReqDist
 		for num_req_left > 0 {
 			wg.Add(1)
-			go sendRequest(info_array[i].PartitionID, info_array[i].BlobID, DCID)
 			go sendRequest(info_array[i].PartitionID, info_array[i].BlobID, DCID)
 			num_req_left -= 1
 		}
