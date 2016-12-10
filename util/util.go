@@ -87,7 +87,7 @@ func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string
 }
 
 func ReadFile(filename string) []string {
-	fmt.Println(os.Getwd())
+	//fmt.Println(os.Getwd())
 	dat, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)

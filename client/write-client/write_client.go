@@ -15,18 +15,18 @@ import (
 )
 
 var (
-	DCID  string
 	IPMap config.ServerIPMap
+	CentralIPMap config.CentralManagerIPMap
 )
 
 
 func writeBlob(address string) {
-	dcid := os.Args[1]
+	dc := os.Args[1]
 	filename := os.Args[2]
 	serverCall := ""
 	outputFile := ""
 
-	if dcid == config.DC0 {
+	if dc == config.DC0 {
 		serverCall = "Listener.HandleCentralManagerWriteRequest"
 		outputFile = "central_manager_storage.txt"
 	}else {
@@ -70,7 +70,8 @@ func writeBlob(address string) {
 
 
 func init() {
-    IPMap.CreateIPMap()
+	IPMap.CreateIPMap()
+	CentralIPMap.CreateIPMap()
 }
 
 
@@ -79,8 +80,13 @@ func main() {
 		err := errors.New("Wrong input, E.g: go run write_client.go 0 input100.txt")
 		log.Fatal(err)
 	}
+	var address string
 	dc := os.Args[1]
-	address := IPMap[dc].ServerIP + ":" + IPMap[dc].ServerPort1
+	if dc == "0" {
+		address = CentralIPMap[dc].ServerIP + ":" + CentralIPMap[dc].ServerPort1
+	}else {
+		address = IPMap[dc].ServerIP + ":" + IPMap[dc].ServerPort1
+	}
 	fmt.Println(address)
 	writeBlob(address)
 }

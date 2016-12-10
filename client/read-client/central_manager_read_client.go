@@ -22,7 +22,7 @@ import (
 
 var (
 	DCID string
-	IPMap config.ServerIPMap
+	CentralIPMap config.CentralManagerIPMap
 )
 
 
@@ -71,13 +71,13 @@ func sendCentralManagerRequest(address string, partitionID string, blobID string
 
 
 func init() {
-	IPMap.CreateIPMap()
+	CentralIPMap.CreateIPMap()
 }
 
 
 func main() {
 	fmt.Println("start client");
-	managerAddr := IPMap[config.DC0].ServerIP + ":" + IPMap[config.DC0].ServerPort1
+	managerAddr := CentralIPMap[config.DC0].ServerIP + ":" + CentralIPMap[config.DC0].ServerPort1
 
 	//TODO: generate read requests that follow the zipf distribution
 	filename := "central_manager_storage.txt"

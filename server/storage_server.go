@@ -225,7 +225,6 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 				var reply ds.ReadResp
 				// Send message to other DCs, response stored in &reply
 				err = client.Call("Listener.HandleRoutedReadReq", req, &reply)
-
 				if err != nil {
 					fmt.Println("RPC error in handle read request. Target IP: "+addr.ServerIP, " port: ", addr.ServerPort1)
 					fmt.Println(err.Error())
@@ -305,7 +304,7 @@ func populateReplica() {
 								"Start populating partition : " + pID + " to DC: " + dID + " with serverIP: " + serverIP + " port: " + serverPort)
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
-								fmt.Println("Dial HTTP error in populating replica. server: " + serverIP + " port: " + serverPort)
+								fmt.Println("Dial HTTP error in populating replica. ")
 								log.Fatal(err)
 							}
 							// Copy partition to message struct to be sent
@@ -347,6 +346,13 @@ func (l *Listener) ReceivePopulatingReplica(
 
 	newPID := newPartition.PartitionID
 	fmt.Println("Receiving populated partition: ", newPID)
+
+	// TODO: get rid of this after fixing distributed sync of replica map
+	if _, ok := storageTable[newPID]; ok {
+		fmt.Println("Partition ", newPID, "Already exists, no merging")
+		*resp = true
+		return nil
+	}
 
 	// Add new entry in lockmaps
 	rcLock.AddEntry(newPID)
@@ -471,7 +477,6 @@ func init() {
 	}
 	f, err := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
-		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	log.SetOutput(f)
@@ -527,7 +532,6 @@ func main() {
 	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", ":"+IPMap[DCID].ServerPort1)
 	if e != nil {
-		fmt.Println(e.Error())
 		log.Fatal(e)
 	}
 	http.Serve(l, nil)
