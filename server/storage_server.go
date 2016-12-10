@@ -108,7 +108,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	content := req.Content
 	size := req.Size
 	if size > config.MaxPartitionSize {
-		err := errors.New("Cannot write file of which size is bigger than partition")
+		err := errors.New("Cannot write file with size bigger than partition")
 		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
@@ -180,9 +180,6 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 
 	ch := make(chan bool)
 
-	///DEBUG
-	//fmt.Print("START:  ", req, "\n")
-
 	// Look up in local storage
 	go func() {
 		// Look for target blob
@@ -214,10 +211,11 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	// Look up in other DC(s)
 	for dcID, IPaddr := range IPMap {
 		if dcID != DCID {
-			go func(addr config.ServerIPAddr) {
+			go func(addr config.ServerIPAddr, dID string) {
 				client, err := rpc.DialHTTP("tcp", addr.ServerIP+":"+addr.ServerPort1)
 				if err != nil {
-					fmt.Println("Dial HTTP error in handle read request. Target IP: "+addr.ServerIP, " port: ", addr.ServerPort1)
+					fmt.Println("Dial HTTP error in handle read request. "+
+						"Target IP: "+addr.ServerIP, " port: ", addr.ServerPort1)
 					fmt.Println(err.Error())
 					log.Fatal(err)
 				}
@@ -226,13 +224,17 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 				// Send message to other DCs, response stored in &reply
 				err = client.Call("Listener.HandleRoutedReadReq", req, &reply)
 				if err != nil {
-					fmt.Println("RPC error in handle read request. Target IP: "+addr.ServerIP, " port: ", addr.ServerPort1)
+					fmt.Println("RPC error in handle read request. "+
+						"Target IP: "+addr.ServerIP, " port: ", addr.ServerPort1)
 					fmt.Println(err.Error())
 					log.Fatal(err)
 				}
 
 				if reply.Size != 0 {
 					*resp = reply
+
+					// Simulate transfer latency
+					util.MockTransLatency(DCID, dID, reply.Size)
 					ch <- true
 				}
 				/*
@@ -241,12 +243,9 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 						*resp = ds.ReadResp{"NOT_FOUND", 0}
 					}
 				*/
-			}(IPaddr)
+			}(IPaddr, dcID)
 		}
 	}
-
-	// DEBUG
-	//fmt.Println("FINISH:  ", resp.Content, resp.Size)
 
 	<-ch // Finish as soon as ONE result found in ANY of the DCs
 	return nil
@@ -299,9 +298,10 @@ func populateReplica() {
 				for dcID, ipAddr := range IPMap {
 					// Only send to DC that haven't got this partition/replica
 					if dcID != DCID && !ReplicaMap[partitionID].FindDC(dcID) {
-						go func(serverIP string, serverPort string, pID string, dID string) {
+						go func(
+							serverIP string, serverPort string, pID string, dID string) {
 							fmt.Println(
-								"Start populating partition : " + pID + " to DC: " + dID + " with serverIP: " + serverIP + " port: " + serverPort)
+								"Start populating partition : " + pID + " to DC: " + dID)
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
 							if err != nil {
 								fmt.Println("Dial HTTP error in populating replica. ")
@@ -320,7 +320,8 @@ func populateReplica() {
 							err = client.Call(
 								"Listener.ReceivePopulatingReplica", &msg, &reply)
 							if err != nil {
-								fmt.Println("Error in receiving reply from populating partition:", pID)
+								fmt.Println(
+									"Error in receiving reply from populating partition:", pID)
 								log.Fatal(err)
 							}
 							if reply {
