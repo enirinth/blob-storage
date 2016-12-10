@@ -7,8 +7,22 @@ type PartitionState struct {
 	DCList      []string
 }
 
+// Add DC to a partitionState (store list of a certain partition)
+// In set semantics (no duplicates)
 func (ps *PartitionState) AddDC(dcID string) {
-	(*ps).DCList = append((*ps).DCList, dcID)
+	if !ps.FindDC(dcID) {
+		(*ps).DCList = append((*ps).DCList, dcID)
+	}
+}
+
+// Find if a certain DC stores a certain partition
+func (ps *PartitionState) FindDC(dcID string) bool {
+	for _, id := range (*ps).DCList {
+		if id == dcID {
+			return true
+		}
+	}
+	return false
 }
 
 // Store two types of read counts

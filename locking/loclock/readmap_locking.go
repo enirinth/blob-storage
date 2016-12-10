@@ -14,8 +14,9 @@ import (
 type ReadCountLockMap map[string]*sync.RWMutex
 
 // Error when trying to lock a partition that doesn't exist
-func handleError(partitionID string) {
-	err := errors.New("PartitionID: " + partitionID + " does not exist in lock map, cannot lock")
+func handleRCError(partitionID string) {
+	err := errors.New("PartitionID: " + partitionID +
+		" does not exist in readcount lock map, cannot lock")
 	fmt.Println(err.Error())
 	log.Fatal(err)
 }
@@ -38,7 +39,7 @@ func (s ReadCountLockMap) AddEntry(newPartitionID string) {
 // Reader lock
 func (s ReadCountLockMap) RLock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleRCError(partitionID)
 	}
 	s[partitionID].RLock()
 }
@@ -46,7 +47,7 @@ func (s ReadCountLockMap) RLock(partitionID string) {
 // Reader unlock
 func (s ReadCountLockMap) RUnlock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleRCError(partitionID)
 	}
 	s[partitionID].RUnlock()
 }
@@ -54,7 +55,7 @@ func (s ReadCountLockMap) RUnlock(partitionID string) {
 // Writer lock
 func (s ReadCountLockMap) WLock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleRCError(partitionID)
 	}
 	s[partitionID].Lock()
 }
@@ -62,7 +63,7 @@ func (s ReadCountLockMap) WLock(partitionID string) {
 // Writer unlock
 func (s ReadCountLockMap) WUnlock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleRCError(partitionID)
 	}
 	s[partitionID].Unlock()
 }

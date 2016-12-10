@@ -5,11 +5,22 @@
 package loclock
 
 import (
+	"errors"
+	"fmt"
+	log "github.com/Sirupsen/logrus"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"sync"
 )
 
 type StorageTableLockMap map[string]*sync.Mutex
+
+// Error when trying to lock a partition that doesn't exist
+func handleSTError(partitionID string) {
+	err := errors.New("PartitionID: " + partitionID +
+		" does not exist in storagetable lock map, cannot lock")
+	fmt.Println(err.Error())
+	log.Fatal(err)
+}
 
 // Constructor (according to Storage Map
 // Called upon initializing of cluster manager
@@ -30,7 +41,7 @@ func (s StorageTableLockMap) AddEntry(newPartitionID string) {
 // (Write) lock
 func (s StorageTableLockMap) Lock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleSTError(partitionID)
 	}
 	s[partitionID].Lock()
 }
@@ -38,7 +49,7 @@ func (s StorageTableLockMap) Lock(partitionID string) {
 // (Writer) unlock
 func (s StorageTableLockMap) Unlock(partitionID string) {
 	if _, ok := s[partitionID]; !ok {
-		handleError(partitionID)
+		handleSTError(partitionID)
 	}
 	s[partitionID].Unlock()
 }

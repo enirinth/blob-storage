@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
-    config "github.com/enirinth/blob-storage/clusterconfig"
 	"io"
 	"io/ioutil"
-    "math"
+	"math"
 	mrand "math/rand"
 	"os"
 	"strconv"
@@ -108,16 +108,6 @@ func GetRandomDCFromList(dcList []string) string {
 	return dcList[random]
 }
 
-// Find if a certain DC stores a certain partition
-func FindDC(dcID string, pState *ds.PartitionState) bool {
-	for _, id := range (*pState).DCList {
-		if id == dcID {
-			return true
-		}
-	}
-	return false
-}
-
 // Find blob (using its ID) in a partition
 // return True if found
 func FindBlob(blobID string, partition *ds.Partition) bool {
@@ -175,86 +165,85 @@ func FindPartition(partitionID string, m *map[string]*ds.PartitionState) bool {
 // Simulate end-to-end latency of transfering a file
 func MockTransLatency(dcID1 string, dcID2 string, size float64) {
 	// TODO: put regression result here
-    x := latencyOfSize(dcID1, dcID2, size)
-    
+	x := latencyOfSize(dcID1, dcID2, size)
+
 	time.Sleep(time.Millisecond * time.Duration(x))
 }
 
-// Given 2 Datacenters and size of data in bytes to transfer, it returns the 
+// Given 2 Datacenters and size of data in bytes to transfer, it returns the
 // simulated latency
 func latencyOfSize(dcID1 string, dcID2 string, size float64) int {
-    ireland := config.DC1
-    northVa := config.DC2
-    northCal := config.DC3
+	ireland := config.DC1
+	northVa := config.DC2
+	northCal := config.DC3
 
-    if dcID1 == northCal {
+	if dcID1 == northCal {
 		if dcID2 == northVa {
-            return latencyCalVirg(size)
-        }else if dcID2 == ireland {
-            return latencyIreCal(size)
+			return latencyCalVirg(size)
+		} else if dcID2 == ireland {
+			return latencyIreCal(size)
 		}
-	}else if dcID1 == northVa {
-        if dcID2 == northCal {
-            return latencyCalVirg(size)
-        }else if dcID2 == ireland {
-            return latencyIreCal(size)
-        }
-    }else if dcID1==ireland {
-        if dcID2 == northCal {
-            return latencyIreCal(size)
-        }else if dcID2 == northVa {
-            return latencyIreVirg(size)
-        }
-    }else {
-        fmt.Print("latencyOfSize has wrong paramters", dcID1, dcID2, "\n")
-        return 0
-    }
-    return 0
+	} else if dcID1 == northVa {
+		if dcID2 == northCal {
+			return latencyCalVirg(size)
+		} else if dcID2 == ireland {
+			return latencyIreCal(size)
+		}
+	} else if dcID1 == ireland {
+		if dcID2 == northCal {
+			return latencyIreCal(size)
+		} else if dcID2 == northVa {
+			return latencyIreVirg(size)
+		}
+	} else {
+		fmt.Print("latencyOfSize has wrong paramters", dcID1, dcID2, "\n")
+		return 0
+	}
+	return 0
 }
 
 // Formula for N. Cal and N. Virg latency time
 func latencyCalVirg(s float64) int {
-    connectionTime := 150
+	connectionTime := 150
 	if s <= 2097152 {
 		x := int(105.92*math.Log2(s)/math.Log2(math.E) - 840.64)
 		if x < 150 {
 			return 0
-		}else {
-			return (x-connectionTime)
+		} else {
+			return (x - connectionTime)
 		}
-	}else {
-		 return (int(0.0001*s+515.34) - connectionTime)
+	} else {
+		return (int(0.0001*s+515.34) - connectionTime)
 	}
 
 }
 
 // Formula for Ireland and N. Virg latency time
 func latencyIreVirg(s float64) int {
-    connectionTime := 146
+	connectionTime := 146
 	if s <= 2097152 {
 		x := int(113.15*math.Log2(s)/math.Log2(math.E) - 944)
 		if x < 146 {
 			return 0
-		}else {
+		} else {
 			return (x - connectionTime)
 		}
-	}else {
+	} else {
 		return (int(.0001*s+502.88) - connectionTime)
 	}
 }
 
 // Formula for Ireland and N. Cal latency time
 func latencyIreCal(s float64) int {
-    connectionTime := 292
+	connectionTime := 292
 	if s <= 2097152 {
 		x := int(194.93*math.Log2(s)/math.Log2(math.E) - 1522)
 		if x < 292 {
 			return 0
-		}else {
+		} else {
 			return (x - connectionTime)
 		}
-	}else {
+	} else {
 		return (int(.0002*s+869.06) - connectionTime)
 	}
 }
-
