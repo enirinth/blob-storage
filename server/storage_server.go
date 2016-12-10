@@ -112,6 +112,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	now := time.Now().Unix()
 	blobUUID, err := util.NewUUID()
 	if err != nil {
+        fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 
@@ -173,6 +174,9 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+    ///DEBUG
+    fmt.Print("START:  ", req, "\n")
+
 	// Look up in local storage
 	go func() {
 		// Look for target blob
@@ -207,13 +211,17 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 			go func(addr config.ServerIPAddr) {
 				client, err := rpc.DialHTTP("tcp", addr.ServerIP+":"+addr.ServerPort1)
 				if err != nil {
+                    fmt.Println(err.Error())
 					log.Fatal(err)
 				}
 
 				var reply ds.ReadResp
 				// Send message to other DCs, response stored in &reply
 				err = client.Call("Listener.HandleRoutedReadReq", req, &reply)
+
+
 				if err != nil {
+                    fmt.Println(err.Error())
 					log.Fatal(err)
 				}
 
@@ -230,6 +238,9 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 			}(IPaddr)
 		}
 	}
+
+    // DEBUG
+    fmt.Println("FINISH:  ", resp.Content, resp.Size)
 
 	wg.Wait() // Finish as soon as ONE result found in ANY of the DCs
 	return nil
@@ -302,6 +313,7 @@ func populateReplica() {
 							err = client.Call(
 								"Listener.ReceivePopulatingReplica", msg, &reply)
 							if err != nil {
+                                fmt.Println(err.Error())  
 								log.Fatal(err)
 							}
 							// Update replica map after sending partition
@@ -381,6 +393,7 @@ func syncReplica() {
 						var reply ds.Partition
 						err = client.Call("Listener.ReceiveSyncReplica", msg, &reply)
 						if err != nil {
+                            fmt.Println(err.Error())
 							log.Fatal(err)
 						}
 
@@ -438,6 +451,7 @@ func init() {
 	}
 	f, err := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
+        fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	log.SetOutput(f)
@@ -493,6 +507,7 @@ func main() {
 	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", ":"+IPMap[DCID].ServerPort1)
 	if e != nil {
+        fmt.Println(e.Error())
 		log.Fatal(e)
 	}
 	http.Serve(l, nil)
