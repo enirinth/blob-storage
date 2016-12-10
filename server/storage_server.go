@@ -112,7 +112,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 	now := time.Now().Unix()
 	blobUUID, err := util.NewUUID()
 	if err != nil {
-        fmt.Println(err.Error())
+		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 
@@ -171,11 +171,10 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 	partitionID := req.PartitionID
 	blobID := req.BlobID
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	ch := make(chan bool)
 
-    ///DEBUG
-    fmt.Print("START:  ", req, "\n")
+	///DEBUG
+	fmt.Print("START:  ", req, "\n")
 
 	// Look up in local storage
 	go func() {
@@ -195,7 +194,7 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 			// ReadMap[partitionID].GlobalRead += 1
 			ReadMap[partitionID].LocalRead += 1
 			rcLock.WUnlock(partitionID)
-			wg.Done()
+			ch <- true
 		}
 		/*
 			else {
@@ -211,7 +210,7 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 			go func(addr config.ServerIPAddr) {
 				client, err := rpc.DialHTTP("tcp", addr.ServerIP+":"+addr.ServerPort1)
 				if err != nil {
-                    fmt.Println(err.Error())
+					fmt.Println(err.Error())
 					log.Fatal(err)
 				}
 
@@ -219,15 +218,14 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 				// Send message to other DCs, response stored in &reply
 				err = client.Call("Listener.HandleRoutedReadReq", req, &reply)
 
-
 				if err != nil {
-                    fmt.Println(err.Error())
+					fmt.Println(err.Error())
 					log.Fatal(err)
 				}
 
 				if reply.Size != 0 {
 					*resp = reply
-					wg.Done()
+					ch <- true
 				}
 				/*
 					else {
@@ -239,10 +237,10 @@ func (l *Listener) HandleReadReq(req ds.ReadReq, resp *ds.ReadResp) error {
 		}
 	}
 
-    // DEBUG
-    fmt.Println("FINISH:  ", resp.Content, resp.Size)
+	// DEBUG
+	fmt.Println("FINISH:  ", resp.Content, resp.Size)
 
-	wg.Wait() // Finish as soon as ONE result found in ANY of the DCs
+	<-ch // Finish as soon as ONE result found in ANY of the DCs
 	return nil
 }
 
@@ -313,7 +311,7 @@ func populateReplica() {
 							err = client.Call(
 								"Listener.ReceivePopulatingReplica", msg, &reply)
 							if err != nil {
-                                fmt.Println(err.Error())  
+								fmt.Println(err.Error())
 								log.Fatal(err)
 							}
 							// Update replica map after sending partition
@@ -393,7 +391,7 @@ func syncReplica() {
 						var reply ds.Partition
 						err = client.Call("Listener.ReceiveSyncReplica", msg, &reply)
 						if err != nil {
-                            fmt.Println(err.Error())
+							fmt.Println(err.Error())
 							log.Fatal(err)
 						}
 
@@ -451,7 +449,7 @@ func init() {
 	}
 	f, err := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
-        fmt.Println(err.Error())
+		fmt.Println(err.Error())
 		log.Fatal(err)
 	}
 	log.SetOutput(f)
@@ -507,7 +505,7 @@ func main() {
 	rpc.HandleHTTP()
 	l, e := net.Listen("tcp", ":"+IPMap[DCID].ServerPort1)
 	if e != nil {
-        fmt.Println(e.Error())
+		fmt.Println(e.Error())
 		log.Fatal(e)
 	}
 	http.Serve(l, nil)
