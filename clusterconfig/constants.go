@@ -30,22 +30,22 @@ const (
 	SERVER0_IP    string = "0.0.0.0"    // Central Manager in California
 	SERVER0_PORT1 string = "41001"
 	SERVER0_PORT2 string = "41002"
-	BANDWIDTH0    int    = 265          // 265 Mbit/s
+	BANDWIDTH0    int    = 320          // 265 Mbit/s
 
 	SERVER1_IP    string = "0.0.0.0"    // DC1 in Ireland
 	SERVER1_PORT1 string = "41011"
 	SERVER1_PORT2 string = "41012"
-	BANDWIDTH1    int    = 160          // Mbit/s
+	BANDWIDTH1    int    = 280          // Mbit/s
 
 	SERVER2_IP    string = "0.0.0.0"    // DC2 in Virginia
 	SERVER2_PORT1 string = "41021"
 	SERVER2_PORT2 string = "41022"
-	BANDWIDTH2    int    = 900          // Mbit/s
+	BANDWIDTH2    int    = 700          // Mbit/s
 
 	SERVER3_IP    string = "0.0.0.0"    // DC3 in North California
 	SERVER3_PORT1 string = "41031"
 	SERVER3_PORT2 string = "41032"
-	BANDWIDTH3    int    = 265          // Mbit/s
+	BANDWIDTH3    int    = 320          // Mbit/s
 )
 
 type ServerIPAddr struct {

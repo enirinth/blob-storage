@@ -24,8 +24,8 @@ func handleRoutingHelp() {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.Debug)
 	fmt.Fprintln(w, "paras\tDescription")
 
-	fmt.Fprintln(w, " -latency number \t # increase server latency")
-	fmt.Fprintln(w, " -bandwidth dc_name reduced bandwidth in kbit \t # reduce server bandwidth")
+	fmt.Fprintln(w, " -latency :number \t # increase server latency")
+	fmt.Fprintln(w, " -bandwidth :dc_name reduced bandwidth in kbit \t # reduce server bandwidth")
 
 	w.Flush()
 }
@@ -52,7 +52,7 @@ func main() {
 		routing.ChangeLatency(latency)
 	case "bandwidth":
 		if len(os.Args) != 4 {
-			err := errors.New("Bandwidth is based on kbit, eg: go run routing.go bandwidth 1 5000")
+			err := errors.New("Input bandwidth decrease percentage, eg: go run routing.go bandwidth 1 50")
 			log.Fatal(err)
 		}
 		dc := os.Args[2]
