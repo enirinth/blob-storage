@@ -1,9 +1,11 @@
 import os
+import sys
 import numpy as np
 import random
 import string
 
-numFiles = 1000
+#numFiles = 100
+numFiles = int(sys.argv[1])
 
 def randFileName (fileLength):
     return ''.join(random.choice(string.lowercase) for i in range(fileLength))
