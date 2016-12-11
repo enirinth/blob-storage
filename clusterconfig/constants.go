@@ -23,6 +23,7 @@ const (
 	PrintServiceOn      bool          = true
 	CopyEveryWhereOn    bool          = false
     readReqFiles        int           = 10
+	defaultBandwidth    int           = 261     // default bandwidth
 )
 
 // Networking configuration

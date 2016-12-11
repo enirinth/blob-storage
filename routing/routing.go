@@ -109,11 +109,13 @@ func ChangeLatency(latency string) {
 
 // use tbf(token bucket filter) to change the throughput, setting bandwidth=rate, and short time max=burst,
 // drop packages when wait time longer than latency
-func ChangeBandwidth(rate string, burst string, latency string) {
+// default burst is 500kb
+// default latency is 100ms
+func ChangeBandwidth(rate string) {
 	ClearTC()
 
 	cmd := "sudo tc qdisc add dev eth0 root tbf rate "
-	cmd += rate + "kbit burst " + burst + "kbit latency " + latency + "ms"
+	cmd += rate + "kbit burst 400kb latency 100ms"
 	fmt.Println(cmd)
 	execCmd(cmd)
 }
