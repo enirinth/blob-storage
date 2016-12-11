@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const numFiles = 1000
+const numFiles = 200
 
 var (
     DCID string
@@ -59,12 +59,8 @@ func readFile() [numFiles]info {
 	return info_array
 }
 
-func sendRequest(PartitionID string, BlobID string, DCID string) {
+func sendRequest(PartitionID string, BlobID string, DCID string, client *rpc.Client ) {
 	defer wg.Done()
-	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Pack message from stdin to WriteReq, initiates struct to get response
 	var msg = ds.ReadReq{PartitionID, BlobID}
 	var reply ds.ReadResp
@@ -72,10 +68,11 @@ func sendRequest(PartitionID string, BlobID string, DCID string) {
 
 	// Send message to storage server, response stored in &reply
 	t0 := time.Now()
-	err = client.Call("Listener.HandleReadReq", msg, &reply)
+    err := client.Call("Listener.HandleReadReq", msg, &reply)
 	t1 := time.Now()
 
 	if err != nil {
+        fmt.Println("Error ListenerHandlerReadReq")
         fmt.Print("ERROR: ", err.Error(), "\n")
 		log.Fatal(err)
 	}
@@ -99,6 +96,13 @@ func main() {
     // Select nearest DC to send request
     DCID = routing.NearestDC()
 
+	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
+	if err != nil {
+        fmt.Println("Error rpc.DialHTTP")
+		log.Fatal(err)
+	}
+
+
     /// Create map of num => {part_id, blob_id}
     m := make(map[int]info)
     cnt := 0
@@ -116,7 +120,7 @@ func main() {
         partitionID := m[randNum].PartitionID
         blobID := m[randNum].BlobID
         wg.Add(1)
-        go sendRequest(partitionID, blobID, DCID)
+        go sendRequest(partitionID, blobID, DCID, client)
         //fmt.Print(randNum, "\n")
     }
 
