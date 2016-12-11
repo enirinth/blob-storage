@@ -182,19 +182,25 @@ func latencyOfSize(dcID1 string, dcID2 string, size float64) int {
 			return latencyCalVirg(size)
 		} else if dcID2 == ireland {
 			return latencyIreCal(size)
-		}
+		} else {
+            return 1
+        }
 	} else if dcID1 == northVa {
 		if dcID2 == northCal {
 			return latencyCalVirg(size)
 		} else if dcID2 == ireland {
 			return latencyIreCal(size)
-		}
+		} else {
+            return 1
+        }
 	} else if dcID1 == ireland {
 		if dcID2 == northCal {
 			return latencyIreCal(size)
 		} else if dcID2 == northVa {
 			return latencyIreVirg(size)
-		}
+		} else {
+            return 1
+        }
 	} else {
 		fmt.Print("latencyOfSize has wrong paramters", dcID1, dcID2, "\n")
 		return 0
