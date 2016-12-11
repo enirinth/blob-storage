@@ -20,7 +20,7 @@ const (
 	LogServiceOn        bool          = false
 	PopulateServiceOn   bool          = true
 	SyncServiceOn       bool          = true
-	PrintServiceOn      bool          = true
+	PrintServiceOn      bool          = false
 	CopyEveryWhereOn    bool          = false
     readReqFiles        int           = 10
 	defaultBandwidth    int           = 261     // default bandwidth
@@ -57,6 +57,7 @@ type CentralManagerIPMap map[string]ServerIPAddr
 // When scaled to more servers, need to also add more entries here
 func (m *ServerIPMap) CreateIPMap() {
 	*m = ServerIPMap{
+		//		"0": ServerIPAddr{SERVER0_IP, SERVER0_PORT1, SERVER0_PORT2},
 		"1": ServerIPAddr{SERVER1_IP, SERVER1_PORT1, SERVER1_PORT2},
 		"2": ServerIPAddr{SERVER2_IP, SERVER2_PORT1, SERVER2_PORT2},
 		"3": ServerIPAddr{SERVER3_IP, SERVER3_PORT1, SERVER3_PORT2},
