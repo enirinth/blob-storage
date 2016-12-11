@@ -144,6 +144,13 @@ func handleRead() {
 	go sendCentralManagerReadReq(managerAddr, partitionID, blobID, &wg)
 }
 
+func handleMultiRead() {
+	if len(os.Args) != 4 {
+		err := errors.New("Wrong input, E.g: go run read partitionID blobID")
+		log.Fatal(err)
+	}
+}
+
 
 func handleReadAll() {
 	if len(os.Args) != 2 {
@@ -212,6 +219,8 @@ func main() {
 		handleShow()
 	case "read":
 		handleRead()
+	case "multiread":
+		handleMultiRead()
 	case "readall":
 		handleReadAll()
 	case "write":
