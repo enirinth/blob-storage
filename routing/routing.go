@@ -89,6 +89,7 @@ func execCmd(cmdStr string) string {
 // remove current traffic control setting on eth0
 func ClearTC() {
 	cmd := "sudo tc qdisc delete dev eth0 root"
+	fmt.Println("Clear TC setting: ", cmd)
 	execCmd(cmd)
 }
 
@@ -99,23 +100,37 @@ func ShowTC() {
 }
 
 // put latency on linux network card, eth0
-func ChangeLatency(latency string) {
+func ChangeLatency(latency int) {
 	ClearTC()
 
-	cmd := "sudo tc qdisc add dev eth0 root netem delay " + latency + "ms"
-	fmt.Println("update: ", cmd)
+	cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
+	fmt.Println("Update TC setting: ", cmd)
 	execCmd(cmd)
 }
 
 // use tbf(token bucket filter) to change the throughput, setting bandwidth=rate, and short time max=burst,
 // drop packages when wait time longer than latency
-// default burst is 500kb
-// default latency is 100ms
-func ChangeBandwidth(rate string) {
+// bandwidth is based on kbit, not kbyte!!
+// default burst is 50000kb = 50MB
+// default latency is 500ms
+func ChangeBandwidth(dc string, rate int) {
 	ClearTC()
-
+	var defaultBandWidth int
+	var newBandwidth string
+	switch dc {
+	case config.DC0:
+		defaultBandWidth = config.BANDWIDTH0 * 1000
+	case config.DC1:
+		defaultBandWidth = config.BANDWIDTH1 * 1000
+	case config.DC2:
+		defaultBandWidth = config.BANDWIDTH2 * 1000
+	case config.DC3:
+		defaultBandWidth = config.BANDWIDTH3 * 1000
+	}
+	newBandwidth = strconv.Itoa(defaultBandWidth - rate)
 	cmd := "sudo tc qdisc add dev eth0 root tbf rate "
-	cmd += rate + "kbit burst 400kb latency 100ms"
-	fmt.Println(cmd)
+	cmd += newBandwidth + "kbit burst 50000kb latency 500ms"
+	fmt.Println("Default bandwidth on dc = " + dc + " is", defaultBandWidth)
+	fmt.Println("Command:", cmd)
 	execCmd(cmd)
 }
