@@ -3,7 +3,7 @@ import numpy as np
 import random
 import string
 
-numFiles = 10
+numFiles = 1000
 
 def randFileName (fileLength):
     return ''.join(random.choice(string.lowercase) for i in range(fileLength))
@@ -21,9 +21,14 @@ def genEverything(file_names):
     out_log = "input.txt"
 
     max_file_size = 2
+    # fileSizeDist = np.random.zipf(2.0, numFiles)
+    # fileSizeDist = fileSizeDist / 4.0 
+    # fileSizeDist = fileSizeDist + .75
+
     fileSizeDist = np.random.zipf(2.0, numFiles)
-    fileSizeDist = fileSizeDist / 4.0
-    # fileSizeDist = fileSizeDist * 10.0 / max(fileSizeDist)
+    fileSizeDist = fileSizeDist * 1.0 / 10 + 1
+    # fileSizeDist = fileSizeDist * 1.0 / max(fileSizeDist) + 1
+
     for i, v in enumerate(fileSizeDist):
         if v > max_file_size:
             fileSizeDist[i] = max_file_size
