@@ -23,6 +23,7 @@ const (
 	PrintServiceOn      bool          = false
 	CopyEveryWhereOn    bool          = false
 	TCON                bool          = false
+	MockTransLatencyON  bool          = false
 	readReqFiles        int           = 10
 	PopulateInfFactor   int           = 20
 	SyncInfFactor       int           = 5

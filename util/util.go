@@ -164,7 +164,9 @@ func FindPartition(partitionID string, m *map[string]*ds.PartitionState) bool {
 
 // Simulate end-to-end latency of transfering a file
 func MockTransLatency(dcID1 string, dcID2 string, size float64) {
-	// TODO: put regression result here
+	if !config.MockTransLatencyON {
+		return
+	}
 	x := latencyOfSize(dcID1, dcID2, size)
 
 	time.Sleep(time.Millisecond * time.Duration(x))
