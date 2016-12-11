@@ -7,6 +7,7 @@ import (
 	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"github.com/enirinth/blob-storage/locking/loclock"
+	"github.com/enirinth/blob-storage/routing"
 	"github.com/enirinth/blob-storage/util"
 	"net"
 	"net/http"
@@ -300,6 +301,10 @@ func populateReplica() {
 					if dcID != DCID && !ReplicaMap[partitionID].FindDC(dcID) {
 						go func(
 							serverIP string, serverPort string, pID string, dID string) {
+
+							// Simulate populateing influence on cluster performance
+							routing.ChangeLatency(config.PopulateInfFactor)
+
 							fmt.Println(
 								"Start populating partition : " + pID + " to DC: " + dID)
 							client, err := rpc.DialHTTP("tcp", serverIP+":"+serverPort)
@@ -330,6 +335,8 @@ func populateReplica() {
 							// Update replica map after sending partition
 							ReplicaMap[pID].AddDC(dID)
 							// No need to update readmap or storage table, because already
+							// Close simualtion after finish populating
+							routing.ClearTC()
 							// have that partition (this is the sender itself)
 						}(ipAddr.ServerIP, ipAddr.ServerPort1, partitionID, dcID)
 					}
@@ -354,6 +361,9 @@ func (l *Listener) ReceivePopulatingReplica(
 		*resp = true
 		return nil
 	}
+
+	// Simulate performance impact when receiving partition
+	routing.ChangeLatency(config.PopulateInfFactor)
 
 	// Add new entry in lockmaps
 	rcLock.AddEntry(newPID)
@@ -383,6 +393,8 @@ func (l *Listener) ReceivePopulatingReplica(
 	}
 
 	*resp = true
+	// Clear TC after receiving partition
+	routing.ClearTC()
 	return nil
 }
 
@@ -398,6 +410,10 @@ func syncReplica() {
 				// Sync current partition with all OTHER DC(s) that store it
 				if DCID != id {
 					go func(dcID string, pID string) {
+
+						// Simulate performance impact when syncing replica
+						routing.ChangeLatency(config.SyncInfFactor)
+
 						fmt.Println("Start syncing replica: " + pID + " to DC: " + dcID)
 						client, err := rpc.DialHTTP(
 							"tcp", IPMap[dcID].ServerIP+":"+IPMap[dcID].ServerPort1)
@@ -432,6 +448,9 @@ func syncReplica() {
 						stLock.Lock(pID)
 						util.MergePartition(storageTable[pID], &reply)
 						stLock.Unlock(pID)
+
+						// Clear TC after syncing
+						routing.ClearTC()
 					}(id, partitionID)
 				}
 			}
@@ -447,6 +466,9 @@ func (l *Listener) ReceiveSyncReplica(
 	pID := comingPartition.PartitionID
 	fmt.Println("Receive delta from sync partition: ", pID)
 
+	// Simualte performance impact when receiving sync replica
+	routing.ChangeLatency(config.SyncInfFactor)
+
 	// Store current partition to reply
 	stLock.Lock(pID)
 	*resp = *storageTable[pID]
@@ -461,10 +483,14 @@ func (l *Listener) ReceiveSyncReplica(
 		fmt.Println("------")
 	}
 
+	// Clear TC after done with syncing
+	routing.ClearTC()
+
 	return nil
 }
 
 func init() {
+	fmt.Println("Initializing server")
 	// Log settings
 	log.SetFormatter(&log.JSONFormatter{})
 	_, e := os.OpenFile(storage_log, os.O_WRONLY|os.O_CREATE, 0755)
@@ -486,6 +512,8 @@ func init() {
 	stLock.CreateLockMap(&storageTable)
 	// Setup routing
 	IPMap.CreateIPMap()
+	// Setup TC
+	routing.ClearTC()
 }
 
 // Server main loop

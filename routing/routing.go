@@ -1,17 +1,17 @@
 package routing
 
 import (
+	"bytes"
 	"fmt"
 	config "github.com/enirinth/blob-storage/clusterconfig"
 	"github.com/enirinth/blob-storage/util"
 	"github.com/tatsushid/go-fastping"
 	"math"
 	"net"
-	"strconv"
-	"time"
-	"strings"
 	"os/exec"
-	"bytes"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Ping ip adress (ICMP), get response time
@@ -63,7 +63,6 @@ func NearestDC() string {
 	return dcID
 }
 
-
 // execute shell command
 func execCmd(cmdStr string) string {
 	parts := strings.Fields(cmdStr)
@@ -88,6 +87,10 @@ func execCmd(cmdStr string) string {
 
 // remove current traffic control setting on eth0
 func ClearTC() {
+	if !config.TCON {
+		return
+	}
+
 	cmd := "sudo tc qdisc delete dev eth0 root"
 	fmt.Println("Clear TC setting: ", cmd)
 	execCmd(cmd)
@@ -95,12 +98,20 @@ func ClearTC() {
 
 // show current traffic control setting
 func ShowTC() {
+	if !config.TCON {
+		return
+	}
+
 	cmd := "tc qdisc show"
 	execCmd(cmd)
 }
 
 // put latency on linux network card, eth0
 func ChangeLatency(latency int) {
+	if !config.TCON {
+		return
+	}
+
 	ClearTC()
 
 	cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
@@ -115,6 +126,9 @@ func ChangeLatency(latency int) {
 // default burst is 50000kb = 50MB
 // default latency is 500ms
 func ChangeBandwidth(dc string, percentage int) {
+	if !config.TCON {
+		return
+	}
 	ClearTC()
 	var defaultBandWidth int
 	var newBandwidth string
@@ -129,7 +143,7 @@ func ChangeBandwidth(dc string, percentage int) {
 		defaultBandWidth = config.BANDWIDTH3 * 1000
 	}
 
-	fmt.Println("Default bandwidth on dc = " + dc + " is", defaultBandWidth, "kbit")
+	fmt.Println("Default bandwidth on dc = "+dc+" is", defaultBandWidth, "kbit")
 	defaultBandWidth = defaultBandWidth * (100 - percentage) / 100
 	newBandwidth = strconv.Itoa(defaultBandWidth)
 	cmd := "sudo tc qdisc add dev eth0 root tbf rate "
