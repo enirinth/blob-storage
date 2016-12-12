@@ -80,7 +80,7 @@ func sendDCRequest(address string, partitionID string, blobID string, size float
 		log.Fatal(err)
 	}
 	t1 := time.Now()
-	fmt.Println("Total time for: ", msg,  t1.Sub(t0))
+	fmt.Println("Total time for req is:", t1.Sub(t0))
 }
 
 
@@ -112,15 +112,15 @@ func init() {
 
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) != 3 {
 		fmt.Println()
-		err := errors.New("Wrong input, E.g: go run central_manager_read_client.go 1")
+		err := errors.New("Wrong input, E.g: go run central_manager_read_client.go 1 10")
 		log.Fatal(err)
 	}
 	fmt.Println("start client");
 	DCID = os.Args[1]
 	managerAddr := CentralIPMap[config.DC0].ServerIP + ":" + CentralIPMap[config.DC0].ServerPort1
-	//readNum, _ := strconv.Atoi(os.Args[2])
+	readNum, _ := strconv.Atoi(os.Args[2])
 
 	t0 = time.Now()
 	filename := "central_manager_storage.txt"
@@ -138,7 +138,7 @@ func main() {
 	}
 
 	///Send Requests
-	for i:=0; i<cnt; i++ {
+	for i:=0; i<readNum; i++ {
 		randNum := rand.Intn(cnt)
 		partitionID := m[randNum].PartitionID
 		blobID := m[randNum].BlobID
