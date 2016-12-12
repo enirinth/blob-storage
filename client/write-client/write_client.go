@@ -57,7 +57,7 @@ func writeBlob(address string) {
 			log.Fatal(err)
 		}
 
-		fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
+		//fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
 		curLineStr := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
 		writeStr += curLineStr
 	}

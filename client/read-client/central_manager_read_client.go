@@ -16,15 +16,52 @@ import (
 	"sync"
 	"time"
 	config "github.com/enirinth/blob-storage/clusterconfig"
-	"github.com/enirinth/blob-storage/util"
 	"strings"
+	"math/rand"
+	"io/ioutil"
+	"strconv"
+	"os"
+	"errors"
 )
+
+const numFiles = 10
 
 var (
 	DCID string
+	IPMap config.ServerIPMap
 	CentralIPMap config.CentralManagerIPMap
+	wg sync.WaitGroup
+	t0 time.Time
 )
 
+type info struct {
+	PartitionID string
+	BlobID      string
+	readReqDist int64
+}
+
+
+func readCentralFile(filename string) [numFiles]info {
+	dat, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(dat), "\n")
+
+	var info_array [numFiles]info
+	for i := 0; i < numFiles; i++ {
+		x := strings.Split(lines[i], " ")
+		info_array[i].PartitionID = x[0]
+		info_array[i].BlobID = x[1]
+
+		readReqDist, err := strconv.ParseInt(x[2], 10, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+		info_array[i].readReqDist = readReqDist
+	}
+	return info_array
+}
 
 func sendDCRequest(address string, partitionID string, blobID string, size float64, wg *sync.WaitGroup){
 	defer wg.Done()
@@ -35,15 +72,15 @@ func sendDCRequest(address string, partitionID string, blobID string, size float
 	}
 
 	// Pack message from stdin to WriteReq, initiates struct to get response
-	var msg = ds.CentralDCReadReq{partitionID, blobID, size}
+	var msg = ds.CentralDCReadReq{partitionID, blobID, size, DCID}
 	var reply ds.CentralDCReadResp
 
 	err = client.Call("Listener.HandleCentralDCReadRequest", msg, &reply)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("DC:", msg, reply)
+	t1 := time.Now()
+	fmt.Println("Total time for: ", msg,  t1.Sub(t0))
 }
 
 
@@ -63,8 +100,6 @@ func sendCentralManagerRequest(address string, partitionID string, blobID string
 		log.Fatal(err)
 	}
 
-	fmt.Println("Manager:", msg, reply)
-
 	wg.Add(1)
 	go sendDCRequest(reply.Address, partitionID, blobID, reply.Size, wg)
 }
@@ -72,31 +107,43 @@ func sendCentralManagerRequest(address string, partitionID string, blobID string
 
 func init() {
 	CentralIPMap.CreateIPMap()
+	IPMap.CreateIPMap()
 }
 
 
 func main() {
+	if len(os.Args) != 2 {
+		fmt.Println()
+		err := errors.New("Wrong input, E.g: go run central_manager_read_client.go 1")
+		log.Fatal(err)
+	}
 	fmt.Println("start client");
+	DCID = os.Args[1]
 	managerAddr := CentralIPMap[config.DC0].ServerIP + ":" + CentralIPMap[config.DC0].ServerPort1
+	//readNum, _ := strconv.Atoi(os.Args[2])
 
-	//TODO: generate read requests that follow the zipf distribution
+	t0 = time.Now()
 	filename := "central_manager_storage.txt"
-	lines := util.ReadFile(filename)
-	numFiles := len(lines) - 1
-	fmt.Println(numFiles, DCID, managerAddr)
+	info_array := readCentralFile(filename)
 
-	t0 := time.Now()
-	var wg sync.WaitGroup
-	for i:=0; i<numFiles; i++ {
-		vars := strings.Split(lines[i], " ")
-		if len(vars) != 3 {
-			log.Fatal("input line error", len(vars), vars)
-		}else {
-			wg.Add(1)
-			go sendCentralManagerRequest(managerAddr, vars[0], vars[1], &wg)
+	/// Create map of num => {part_id, blob_id}
+	m := make(map[int]info)
+	cnt := 0
+	for i:=0; i<len(info_array); i++ {
+		num_req_left := int(info_array[i].readReqDist)
+		for j:=0; j<num_req_left; j++ {
+			m[cnt] = info_array[i]
+			cnt += 1
 		}
 	}
+
+	///Send Requests
+	for i:=0; i<cnt; i++ {
+		randNum := rand.Intn(cnt)
+		partitionID := m[randNum].PartitionID
+		blobID := m[randNum].BlobID
+		wg.Add(1)
+		go sendCentralManagerRequest(managerAddr, partitionID, blobID, &wg)
+	}
 	wg.Wait()
-	t1 := time.Now()
-	fmt.Println("Total time: ", t1.Sub(t0))
 }

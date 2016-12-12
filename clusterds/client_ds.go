@@ -36,6 +36,7 @@ type CentralDCReadReq struct {
 	PartitionID string
 	BlobID      string
 	Size        float64
+	From        string
 }
 
 type CentralDCReadResp struct {

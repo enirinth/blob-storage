@@ -19,6 +19,7 @@ import (
 	"os"
 	"errors"
 	//"github.com/enirinth/blob-storage/locking/loclock"
+	"github.com/enirinth/blob-storage/util"
 )
 
 var (
@@ -41,9 +42,10 @@ type Listener int
 
 
 func (l *Listener) HandleCentralDCReadRequest(req ds.CentralDCReadReq, resp *ds.CentralDCReadResp) error{
-	//size := req.Size
-	// TODO:  sleep for some time based on the size
 	fmt.Println("Handle req", req)
+
+	// Simulate transfer latency
+	util.MockTransLatency(DCID, req.From, req.Size)
 	*resp = ds.CentralDCReadResp{Content: "blob content"}
 	return nil
 }
