@@ -14,6 +14,8 @@ import (
 	"github.com/enirinth/blob-storage/util"
 )
 
+const FILEPATH = "../../data/"
+
 var (
 	IPMap config.ServerIPMap
 	CentralIPMap config.CentralManagerIPMap
@@ -21,18 +23,13 @@ var (
 
 
 func writeBlob(address string) {
-	dc := os.Args[1]
-	filename := os.Args[2]
+	filename := os.Args[1]
 	serverCall := ""
 	outputFile := ""
 
-	if dc == config.DC0 {
-		serverCall = "Listener.HandleCentralManagerWriteRequest"
-		outputFile = "central_manager_storage.txt"
-	}else {
-		serverCall = "Listener.HandleWriteReq"
-		outputFile = "out.txt"
-	}
+	serverCall = "Listener.HandleCentralManagerWriteRequest"
+	outputFile = "central_manager_storage.txt"
+
 	lines := util.ReadFile(filename)
 	numFiles := len(lines) - 1
 
@@ -57,12 +54,11 @@ func writeBlob(address string) {
 			log.Fatal(err)
 		}
 
-		//fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
 		curLineStr := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
 		writeStr += curLineStr
 	}
 	d1 := []byte(writeStr)
-	err = ioutil.WriteFile("../read-client/" + outputFile, d1, 0644)
+	err = ioutil.WriteFile(FILEPATH + outputFile, d1, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,17 +72,13 @@ func init() {
 
 
 func main() {
-	if len(os.Args) != 3 {
-		err := errors.New("Wrong input, E.g: go run write_client.go 0 input100.txt")
+	if len(os.Args) != 2 {
+		err := errors.New("Wrong input, E.g: go run write_blob_central.go input.txt")
 		log.Fatal(err)
 	}
 	var address string
-	dc := os.Args[1]
-	if dc == "0" {
-		address = CentralIPMap[dc].ServerIP + ":" + CentralIPMap[dc].ServerPort1
-	}else {
-		address = IPMap[dc].ServerIP + ":" + IPMap[dc].ServerPort1
-	}
+	dc := config.DC0
+	address = CentralIPMap[dc].ServerIP + ":" + CentralIPMap[dc].ServerPort1
 	fmt.Println(address)
 	writeBlob(address)
 }

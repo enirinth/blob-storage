@@ -18,7 +18,7 @@ def genFileNames(numFiles):
 def genEverything(file_names):
     numFiles = len(file_names)
 
-    out_log = "input.txt"
+    out_log = "data/.txt"
 
     fileSizeDist = np.random.zipf(2.0, numFiles)
     # fileSizeDist = fileSizeDist * 10.0 / max(fileSizeDist)

@@ -4,7 +4,12 @@
 dcName=$1
 
 echo "First test, 2 clients"
-go run central_manager_read_client.go $1 2
+
+for i in 1 2 3 4 5 6
+do
+    go run central_manager_read_client.go $1 2
+done
+
 
 echo "second tes, 5 clients"
 go run central_manager_read_client.go $1 5

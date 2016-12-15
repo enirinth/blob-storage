@@ -8,12 +8,10 @@ import (
 	config "github.com/enirinth/blob-storage/clusterconfig"
 	ds "github.com/enirinth/blob-storage/clusterds"
 	"io"
-	"io/ioutil"
 	"math"
 	mrand "math/rand"
 	"os"
 	"strconv"
-	"strings"
 	"text/tabwriter"
 	"time"
 )
@@ -84,16 +82,6 @@ func PrintCluster(ReplicaMap *map[string]*ds.PartitionState, ReadMap *map[string
 		fmt.Fprintln(w, line)
 	}
 	w.Flush()
-}
-
-func ReadFile(filename string) []string {
-	//fmt.Println(os.Getwd())
-	dat, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	lines := strings.Split(string(dat), "\n")
-	return lines
 }
 
 // pick a random number from [0, numDC); return the dc name as string
