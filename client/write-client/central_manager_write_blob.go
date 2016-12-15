@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
-	"github.com/enirinth/blob-storage/util"
 )
 
 const FILEPATH = "../../data/"
@@ -30,7 +29,11 @@ func writeBlob(address string) {
 	serverCall = "Listener.HandleCentralManagerWriteRequest"
 	outputFile = "central_manager_storage.txt"
 
-	lines := util.ReadFile(filename)
+	dat, err := ioutil.ReadFile(FILEPATH + filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(dat), "\n")
 	numFiles := len(lines) - 1
 
 	client, err := rpc.DialHTTP("tcp", address)
@@ -58,6 +61,7 @@ func writeBlob(address string) {
 		writeStr += curLineStr
 	}
 	d1 := []byte(writeStr)
+	fmt.Println(FILEPATH+outputFile)
 	err = ioutil.WriteFile(FILEPATH + outputFile, d1, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +77,7 @@ func init() {
 
 func main() {
 	if len(os.Args) != 2 {
-		err := errors.New("Wrong input, E.g: go run write_blob_central.go input.txt")
+		err := errors.New("Wrong input, E.g: go run central_manager_write_blob.go input.txt")
 		log.Fatal(err)
 	}
 	var address string
