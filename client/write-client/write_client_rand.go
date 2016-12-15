@@ -16,6 +16,8 @@ import (
     "time"
 )
 
+const FILEPATH = "../../data/"
+
 var (
 	IPMap config.ServerIPMap
 	CentralIPMap config.CentralManagerIPMap
@@ -43,7 +45,11 @@ func writeBlob() {
 	filename := os.Args[1]
     outputFile := "out.txt"
 
-	lines := util.ReadFile(filename)
+	dat, err := ioutil.ReadFile(FILEPATH + filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(dat), "\n")
 	numFiles := len(lines) - 1
 
 	writeStr := ""
@@ -70,7 +76,7 @@ func writeBlob() {
 	}
 
 	d1 := []byte(writeStr)
-    err := ioutil.WriteFile("../read-client/" + outputFile, d1, 0644)
+    err = ioutil.WriteFile(FILEPATH + outputFile, d1, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +93,7 @@ func main() {
     rand.Seed(time.Now().UnixNano()) // takes the current time in nanoseconds as the seed
 
 	if len(os.Args) != 2 {
-		err := errors.New("Wrong input, E.g: go run write_client.go input100.txt")
+		err := errors.New("Wrong input, E.g: go run central_manager_write_blob.go input100.txt")
 		log.Fatal(err)
 	}
 	writeBlob()

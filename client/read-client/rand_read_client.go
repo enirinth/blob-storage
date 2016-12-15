@@ -16,8 +16,6 @@ import (
 	"time"
 )
 
-const numFiles = 10
-
 var (
     DCID string
     IPMap config.ServerIPMap
@@ -30,18 +28,19 @@ type info struct {
 	readReqDist int64
 }
 
-
+const FILEPATH = "../../data/"
 // readResponses_chan := make(chan )
 
-func readFile() [numFiles]info {
+func readFile() []info {
 	read_file := "out.txt"
-	dat, err := ioutil.ReadFile(read_file)
+	dat, err := ioutil.ReadFile(FILEPATH + read_file)
 	if err != nil {
 		log.Fatal(err)
 	}
 	lines := strings.Split(string(dat), "\n")
+	numFiles := len(lines) - 1
 
-	var info_array [numFiles]info
+	info_array := make([]info, numFiles)
 	for i := 0; i < numFiles; i++ {
 		x := strings.Split(lines[i], " ")
 		info_array[i].PartitionID = x[0]
@@ -72,6 +71,7 @@ func sendRequest(PartitionID string, BlobID string) {
     }
 
 
+	//DCID = util.GetRandomDC(config.NumDC+1)    // NumDC=3, thus random from [1,4)
 	client, err := rpc.DialHTTP("tcp", IPMap[DCID].ServerIP+":"+IPMap[DCID].ServerPort1)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +90,7 @@ func sendRequest(PartitionID string, BlobID string) {
         fmt.Print("ERROR: ", err.Error(), "\n")
 		log.Fatal(err)
 	}
-	fmt.Println(msg, reply, t1.Sub(t0))
+	fmt.Println(t1.Sub(t0))
 
 	return
 }
@@ -98,9 +98,17 @@ func sendRequest(PartitionID string, BlobID string) {
 func init() {
     IPMap.CreateIPMap()
 }
+
 func main() {
+	if len(os.Args) != 3 {
+		fmt.Println()
+		err := errors.New("Wrong input, E.g: go run rand_read_client.go 1 10")
+		log.Fatal(err)
+	}
+
     rand.Seed(time.Now().UnixNano()) // takes the current time in nanoseconds as the seed
 	info_array := readFile()
+	readNum, _ := strconv.Atoi(os.Args[2])
 
     /// Create map of num => {part_id, blob_id}
     m := make(map[int]info)
@@ -119,7 +127,7 @@ func main() {
     // }
 
     ///Send Requests
-    for i:=0; i<cnt; i++ {
+    for i:=0; i<readNum; i++ {
         randNum := rand.Intn(cnt)
         partitionID := m[randNum].PartitionID
         blobID := m[randNum].BlobID

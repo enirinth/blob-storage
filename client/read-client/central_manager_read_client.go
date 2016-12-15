@@ -24,7 +24,7 @@ import (
 	"errors"
 )
 
-const numFiles = 10
+const FILEPATH = "../../data/"
 
 var (
 	DCID string
@@ -41,14 +41,15 @@ type info struct {
 }
 
 
-func readCentralFile(filename string) [numFiles]info {
-	dat, err := ioutil.ReadFile(filename)
+func readCentralFile(filename string) []info {
+	dat, err := ioutil.ReadFile(FILEPATH + filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 	lines := strings.Split(string(dat), "\n")
+	numFiles := len(lines) - 1
 
-	var info_array [numFiles]info
+	info_array := make([]info, numFiles)
 	for i := 0; i < numFiles; i++ {
 		x := strings.Split(lines[i], " ")
 		info_array[i].PartitionID = x[0]
@@ -80,7 +81,7 @@ func sendDCRequest(address string, partitionID string, blobID string, size float
 		log.Fatal(err)
 	}
 	t1 := time.Now()
-	fmt.Println("Total time for req is:", t1.Sub(t0))
+	fmt.Println(t1.Sub(t0))
 }
 
 
@@ -117,7 +118,7 @@ func main() {
 		err := errors.New("Wrong input, E.g: go run central_manager_read_client.go 1 10")
 		log.Fatal(err)
 	}
-	fmt.Println("start client");
+	//fmt.Println("start client");
 	DCID = os.Args[1]
 	managerAddr := CentralIPMap[config.DC0].ServerIP + ":" + CentralIPMap[config.DC0].ServerPort1
 	readNum, _ := strconv.Atoi(os.Args[2])

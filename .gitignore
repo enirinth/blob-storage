@@ -2,3 +2,5 @@
 .idea/
 input*.txt
 storage_log
+data/*.txt
+data/Client*
