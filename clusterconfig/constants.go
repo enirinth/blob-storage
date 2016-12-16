@@ -21,12 +21,12 @@ const (
 	PopulateServiceOn   bool          = true
 	SyncServiceOn       bool          = true
 	PrintServiceOn      bool          = false
-	CopyEveryWhereOn    bool          = false
+	CopyEveryWhereOn    bool          = true
 	TCON                bool          = true
 	MockTransLatencyON  bool          = true
 	readReqFiles        int           = 10
-	PopulateInfFactor   int           = 40
-	SyncInfFactor       int           = 5
+	PopulateInfFactor   int           = 80
+	SyncInfFactor       int           = 20
 )
 
 // Networking configuration
