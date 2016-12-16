@@ -14,7 +14,7 @@ go get -u github.com/enirinth/blob-storage
 ```
 
 ## Demo
-Enter project director
+Enter project directory
 ```sh
 cd582
 ```
