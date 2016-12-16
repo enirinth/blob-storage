@@ -22,13 +22,13 @@ def genEverything(file_names):
 
     out_log = "input.txt"
 
-    max_file_size = 9
-    # fileSizeDist = np.random.zipf(2.0, numFiles)
-    # fileSizeDist = fileSizeDist / 4.0 
-    # fileSizeDist = fileSizeDist + .75
-
+    max_file_size = 10
     fileSizeDist = np.random.zipf(2.0, numFiles)
-    fileSizeDist = fileSizeDist * 1.0 / 10 + 5
+    fileSizeDist = fileSizeDist / 4.0 
+    fileSizeDist = fileSizeDist + .75
+
+    # fileSizeDist = np.random.zipf(2.0, numFiles)
+    # fileSizeDist = fileSizeDist * 1.0 / 10 + 5
     # fileSizeDist = fileSizeDist * 1.0 / max(fileSizeDist) + 1
 
     for i, v in enumerate(fileSizeDist):
