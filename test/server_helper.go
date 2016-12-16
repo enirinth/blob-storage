@@ -17,15 +17,17 @@ import (
 	"net/rpc"
 	"os"
 	"errors"
-	"github.com/enirinth/blob-storage/util"
+	//"github.com/enirinth/blob-storage/util"
 	"strings"
 	"strconv"
 	"text/tabwriter"
+	"io/ioutil"
 )
 
 var (
 	wg sync.WaitGroup
 	managerAddr string
+	IPMap config.ServerIPMap
 	CentralIPMap config.CentralManagerIPMap
 )
 
@@ -56,7 +58,7 @@ func sendDCRequest(address string, partitionID string, blobID string, size float
 		log.Fatal("Connection error", err)
 	}
 
-	var msg = ds.CentralDCReadReq{partitionID, blobID, size}
+	var msg = ds.CentralDCReadReq{partitionID, blobID, size, "1"}
 	var reply ds.CentralDCReadResp
 
 	err = client.Call("Listener.HandleCentralDCReadRequest", msg, &reply)
@@ -158,7 +160,11 @@ func handleReadAll() {
 		log.Fatal(err)
 	}
 	filename := "../client/read-client/central_manager_storage.txt"
-	lines := util.ReadFile(filename)
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(data), "\n")
 	numFiles := len(lines) - 1
 	for i:=0; i<numFiles; i++ {
 		vars := strings.Split(lines[i], " ")
@@ -174,7 +180,7 @@ func handleReadAll() {
 
 func handleWrite(){
 	if len(os.Args) != 4 {
-		err := errors.New("Wrong input, E.g: go run central_manager.go write content size")
+		err := errors.New("Wrong input, E.g: go run server_helper.go write content size")
 		log.Fatal(err)
 	}
 	content := os.Args[2]
@@ -199,14 +205,51 @@ func handleHelp() {
 }
 
 
+func handleStorageReq() {
+	var hotCopySize float64
+	var blindCopySize float64
+	blindCopyMap := make(map[string] float64)
+
+
+	for _, info := range IPMap {
+		addr := info.ServerIP + ":" + info.ServerPort1
+		client, err := rpc.DialHTTP("tcp", addr)
+
+		msg := ""
+		var reply ds.StorageInfo
+
+		err = client.Call("Listener.HandleStorageInfo", msg, &reply)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		tmp := reply.Storage
+		for k, v := range tmp {
+			hotCopySize += v
+			if _, ok := blindCopyMap[k]; !ok {
+				blindCopyMap[k] = v
+			}
+		}
+	}
+
+	for _, v := range blindCopyMap {
+		blindCopySize += v*3
+	}
+
+	fmt.Println("blind copy", blindCopySize)
+	fmt.Println("hot copy", hotCopySize)
+}
+
+
 func init() {
+	IPMap.CreateIPMap()
 	CentralIPMap.CreateIPMap()
 }
 
 
 func main() {
 	if len(os.Args) < 2 {
-		err := errors.New("Invalid paramater input")
+		err := errors.New("Invalid paramater input, e.g go run server_helper.go from show")
 		log.Fatal(err)
 	}
 
@@ -217,6 +260,8 @@ func main() {
 	switch arg {
 	case "show":
 		handleShow()
+	case "storage":
+		handleStorageReq()
 	case "read":
 		handleRead()
 	case "multiread":

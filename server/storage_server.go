@@ -159,7 +159,7 @@ func (l *Listener) HandleWriteReq(req ds.WriteReq, resp *ds.WriteResp) error {
 
 	// Reply with (PartitionID, blobID) pair
 	*resp = ds.WriteResp{partitionID, blobUUID}
-
+	fmt.Println(partitionID, blobUUID, size)
 	// Print storage table after write
 	if config.PrintServiceOn {
 		fmt.Println("Storage Table after update:")
@@ -489,6 +489,15 @@ func (l *Listener) ReceiveSyncReplica(
 	return nil
 }
 
+func (l *Listener) HandleStorageInfo(req string, resp *ds.StorageInfo) error {
+	storage := make(map[string] float64)
+	for k, v := range storageTable{
+		storage[k] = v.PartitionSize
+	}
+	*resp = ds.StorageInfo{Storage : storage}
+	return nil
+}
+
 func init() {
 	fmt.Println("Initializing server")
 	// Log settings
@@ -513,7 +522,7 @@ func init() {
 	// Setup routing
 	IPMap.CreateIPMap()
 	// Setup TC
-	routing.ClearTC()
+	//routing.ClearTC()
 }
 
 // Server main loop

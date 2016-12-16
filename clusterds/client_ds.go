@@ -42,3 +42,7 @@ type CentralDCReadReq struct {
 type CentralDCReadResp struct {
 	Content  string
 }
+
+type StorageInfo struct {
+	Storage map[string] float64
+}

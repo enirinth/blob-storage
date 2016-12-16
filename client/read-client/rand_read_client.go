@@ -90,7 +90,7 @@ func sendRequest(PartitionID string, BlobID string) {
         fmt.Print("ERROR: ", err.Error(), "\n")
 		log.Fatal(err)
 	}
-	fmt.Println(t1.Sub(t0))
+	fmt.Println(t1.Sub(t0), reply.Size)
 
 	return
 }
