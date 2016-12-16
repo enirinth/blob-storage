@@ -113,7 +113,7 @@ func ChangeLatency(latency int) {
 	}
 
 	//ClearTC()
-	time.Sleep(time.Millisecond * latency)
+	time.Sleep(time.Millisecond * time.Duration(latency))
 	//cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
 	//fmt.Println("Update TC setting: ", cmd)
 	//execCmd(cmd)
