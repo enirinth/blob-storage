@@ -14,6 +14,10 @@ go get -u github.com/enirinth/blob-storage
 ```
 
 ## Demo
+Enter project director
+```sh
+cd582
+```
 #### Server
 Config `clusterconfig/constants.go` to set IP and ports for three DCs. (It is already 0.0.0.0, you are safe to test this locally)    
 ```sh
