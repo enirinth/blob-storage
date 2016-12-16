@@ -24,22 +24,22 @@ var (
 )
 
 
-func sendWriteRequest(Content string, Size float64, DCID string) (string, string){
-    address := IPMap[DCID].ServerIP + ":" + IPMap[DCID].ServerPort1
-
-    client, err := rpc.DialHTTP("tcp", address)
-	if err != nil {
-		log.Fatal(err)
-	}
-    var msg = ds.WriteReq{Content, Size}
-    var reply ds.WriteResp
-
-    err = client.Call("Listener.HandleWriteReq", msg, &reply)
-    if err != nil {
-        log.Fatal(err)
-    }
-    return reply.PartitionID, reply.BlobID
-}
+//func sendWriteRequest(Content string, Size float64, DCID string) (string, string){
+//    address := IPMap[DCID].ServerIP + ":" + IPMap[DCID].ServerPort1
+//
+//    client, err := rpc.DialHTTP("tcp", address)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//    var msg = ds.WriteReq{Content, Size}
+//    var reply ds.WriteResp
+//
+//    err = client.Call("Listener.HandleWriteReq", msg, &reply)
+//    if err != nil {
+//        log.Fatal(err)
+//    }
+//    return reply.PartitionID, reply.BlobID
+//}
 
 func writeBlob() {
 	filename := os.Args[1]
@@ -51,6 +51,16 @@ func writeBlob() {
 	}
 	lines := strings.Split(string(dat), "\n")
 	numFiles := len(lines) - 1
+
+	addr1 := IPMap[config.DC1].ServerIP + ":" + IPMap[config.DC1].ServerPort1
+	client1, err := rpc.DialHTTP("tcp", addr1)
+	addr2 := IPMap[config.DC2].ServerIP + ":" + IPMap[config.DC2].ServerPort1
+	client2, err := rpc.DialHTTP("tcp", addr2)
+	addr3 := IPMap[config.DC3].ServerIP + ":" + IPMap[config.DC3].ServerPort1
+	client3, err := rpc.DialHTTP("tcp", addr3)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	writeStr := ""
 	for i := 0; i < numFiles; i++ {
@@ -67,8 +77,16 @@ func writeBlob() {
         randDCID := util.GetRandomDC(3)
         fmt.Println(randDCID)
 
+		var msg = ds.WriteReq{vars[0], f}
 		var reply ds.WriteResp
-        reply.PartitionID, reply.BlobID = sendWriteRequest(vars[0], f, randDCID)
+
+		if randDCID == config.DC1 {
+			err = client1.Call("Listener.HandleWriteReq", msg, &reply)
+		} else if randDCID == config.DC2 {
+			err = client2.Call("Listener.HandleWriteReq", msg, &reply)
+		} else if randDCID == config.DC3 {
+			err = client3.Call("Listener.HandleWriteReq", msg, &reply)
+		}
 
 		fmt.Println(reply.PartitionID + " " + reply.BlobID + " " + vars[2])
 		curLineStr := reply.PartitionID + " " + reply.BlobID + " " + vars[2] + "\n"
