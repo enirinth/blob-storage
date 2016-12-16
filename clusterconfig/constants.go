@@ -25,7 +25,7 @@ const (
 	TCON                bool          = true
 	MockTransLatencyON  bool          = true
 	readReqFiles        int           = 10
-	PopulateInfFactor   int           = 20
+	PopulateInfFactor   int           = 40
 	SyncInfFactor       int           = 5
 )
 

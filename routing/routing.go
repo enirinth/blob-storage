@@ -112,11 +112,11 @@ func ChangeLatency(latency int) {
 		return
 	}
 
-	ClearTC()
-
-	cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
-	fmt.Println("Update TC setting: ", cmd)
-	execCmd(cmd)
+	//ClearTC()
+	time.Sleep(time.Millisecond * latency)
+	//cmd := "sudo tc qdisc add dev eth0 root netem delay " + strconv.Itoa(latency) + "ms"
+	//fmt.Println("Update TC setting: ", cmd)
+	//execCmd(cmd)
 }
 
 // use tbf(token bucket filter) to change the throughput, setting bandwidth*=(100-percentage)/100
