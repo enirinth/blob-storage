@@ -336,7 +336,7 @@ func populateReplica() {
 							ReplicaMap[pID].AddDC(dID)
 							// No need to update readmap or storage table, because already
 							// Close simualtion after finish populating
-							routing.ClearTC()
+							//routing.ClearTC()
 							// have that partition (this is the sender itself)
 						}(ipAddr.ServerIP, ipAddr.ServerPort1, partitionID, dcID)
 					}
@@ -394,7 +394,7 @@ func (l *Listener) ReceivePopulatingReplica(
 
 	*resp = true
 	// Clear TC after receiving partition
-	routing.ClearTC()
+	//routing.ClearTC()
 	return nil
 }
 
@@ -450,7 +450,7 @@ func syncReplica() {
 						stLock.Unlock(pID)
 
 						// Clear TC after syncing
-						routing.ClearTC()
+						//routing.ClearTC()
 					}(id, partitionID)
 				}
 			}
@@ -484,7 +484,7 @@ func (l *Listener) ReceiveSyncReplica(
 	}
 
 	// Clear TC after done with syncing
-	routing.ClearTC()
+	//routing.ClearTC()
 
 	return nil
 }
