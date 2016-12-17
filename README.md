@@ -45,8 +45,7 @@ After those operations, we have generate 500 blobs and test read requests for ce
 ```sh
 go run server/storage_server.go 1
 ```
-This will start storage server on DC 1     
-Similar to the other DCs, remember to change the last parameter. 2 for DC2, 3 for DC3.
+This will start storage server on DC 1, Similar to the other DCs, remember to change the last parameter. 2 for DC2, 3 for DC3.
 
 #### Client
 Interactive clients are ligth-wighted tool for communication with servers, like write one blob file or read specific blob.
@@ -72,6 +71,7 @@ Type in the pair you got from write request
 It will return `test 1`    
 Read the same `<id1, id2>` more than 5 times, and check the servers, you will see the partition containing this file gets populated to all DCs   
 
+
 for evulation test, similar to centralized clients, but run `run_write_rand.sh` to generate blob files, and run `run_read_test.sh` to generate read requests. 
 
-#### Good Luck and enjoy! 
+#### Good luck and enjoy! 
