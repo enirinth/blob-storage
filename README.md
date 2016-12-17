@@ -20,7 +20,7 @@ cd582    # Enter project directory
 ## Configuration
 We can update number of DCs, IP, port and many other settings in `clusterconfig/constants.go`. (It is already 0.0.0.0, you are safe to test this locally)   
 
-## Centralized design
+## Demo for Centralized Server
 #### Server
 ```sh
 cd server                   # enter server folder
@@ -40,7 +40,11 @@ sh central_manager_read_test.sh    # start read requests
 ```
 After those operations, we have generate 500 blobs and test read requests for centralized manager.
 
-## De-centralized Design
+## Demo for De-centralized Server
+Go to project root directory
+```sh
+cd582
+```
 #### Server 
 ```sh
 go run server/storage_server.go 1
