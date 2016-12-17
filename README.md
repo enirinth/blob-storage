@@ -7,18 +7,17 @@ bash aws-setup.sh
 source ~/.bashrc
 ```
 It's best to run above after you login a **newly launched** AWS instances (EC2, free-tier, RHEL) i.e. Don't run `aws-setup.sh` more than once. This should work for most linux distro with YUM
-## Update project code base
+
 ```sh
-go get -u github.com/enirinth/blob-storage
+go get -u github.com/enirinth/blob-storage    # Update project code base
 ```
 
 ## project directory
-Enter project directory
 ```sh
-cd582
+cd582    # Enter project directory
 ```
 
-## Config
+## Configuration
 We can update number of DCs, IP, port and many other settings in `clusterconfig/constants.go`. (It is already 0.0.0.0, you are safe to test this locally)   
 
 ## Centralized design
@@ -50,7 +49,7 @@ This will start storage server on DC 1
 Similar to the other DCs, remember to change the last parameter. 2 for DC2, 3 for DC3.
 
 #### Client
-Interactive clients are ligth-wighted for communication with servers, like write one blob file or read specific blob.
+Interactive clients are ligth-wighted tool for communication with servers, like write one blob file or read specific blob.
 Open another terminal session and run
 ```sh
 go run interactive-client/write-client/write_client.go 1
@@ -72,3 +71,7 @@ Type in the pair you got from write request
 ```
 It will return `test 1`    
 Read the same `<id1, id2>` more than 5 times, and check the servers, you will see the partition containing this file gets populated to all DCs   
+
+for evulation test, similar to centralized clients, but run `run_write_rand.sh` to generate blob files, and run `run_read_test.sh` to generate read requests. 
+
+#### Good Luck and enjoy! 
