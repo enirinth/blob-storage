@@ -1,4 +1,4 @@
-# README
+How to use
 --
 
 ## Set up instances
@@ -12,33 +12,14 @@ It's best to run above after you login a **newly launched** AWS instances (EC2, 
 go get -u github.com/enirinth/blob-storage    # Update project code base
 ```
 
-## project directory
+An alias is already created to enter project root directory   
 ```sh
-cd582    # Enter project directory
+cd582    
 ```
 
 ## Configuration
-We can update number of DCs, IP, port and many other settings in `clusterconfig/constants.go`. (It is already 0.0.0.0, you are safe to test this locally)   
-
-## Demo for Centralized Server
-#### Server
-```sh
-cd server                   # enter server folder
-go run central_manager.go   # run central manager
-go run central_dc.go 1      # run data center server
-go run central_dc.go 2
-go run central_dc.go 3
-```
-Now our servers are ready, waiting for read/write requests.
-
-#### Client
-```sh
-cd client/write-client             # enter write client folder to create blobs
-sh run_central_write_blob.sh 500   # create specific number of files which follows the zipf distribution
-cd client/read-client              # enter read client folder to generate read requests
-sh central_manager_read_test.sh    # start read requests
-```
-After those operations, we have generate 500 blobs and test read requests for centralized manager.
+You may configure number of DCs, IP, port and other settings in `clusterconfig/constants.go`.
+(All DC IPs are 0.0.0.0 by default, you are safe to test this locally)   
 
 ## Demo for De-centralized Server
 Go to project root directory
@@ -49,10 +30,10 @@ cd582
 ```sh
 go run server/storage_server.go 1
 ```
-This will start storage server on DC 1, Similar to the other DCs, remember to change the last parameter. 2 for DC2, 3 for DC3.
+This will start DC server 1.   
+Similarly start server 2 and 3 in different terminal sessions.    
 
 #### Client
-Interactive clients are ligth-wighted tool for communication with servers, like write one blob file or read specific blob.
 Open another terminal session and run
 ```sh
 go run interactive-client/write-client/write_client.go 1
@@ -75,7 +56,23 @@ Type in the pair you got from write request
 It will return `test 1`    
 Read the same `<id1, id2>` more than 5 times, and check the servers, you will see the partition containing this file gets populated to all DCs   
 
+## Demo for Centralized Server
+#### Server
+```sh
+cd server                   # enter server folder
+go run central_manager.go   # run central manager
+go run central_dc.go 1      # run DC storage server
+go run central_dc.go 2     
+go run central_dc.go 3
+```
+Start DC servers and central manager.
+Remember to run central manager and three DC servers in different terminal sessions.
 
-for evulation test, similar to centralized clients, but run `run_write_rand.sh` to generate blob files, and run `run_read_test.sh` to generate read requests. 
-
-#### Good luck and enjoy! 
+#### Client
+```sh
+cd client/write-client             # enter write client folder to create blobs
+sh run_central_write_blob.sh 500   # create specific number of files which follows the zipf distribution
+cd client/read-client              # enter read client folder to generate read requests
+sh central_manager_read_test.sh    # start read requests
+```
+500 blobs will be generated and latency results will be printed out
