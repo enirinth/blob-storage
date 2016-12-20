@@ -4,7 +4,8 @@ How to use
 A mock storage server that stores BLOBs(Binary Large OBjects) in geographically different data centers in a fashion that:
 - Selectively replicate BLOBs based on their popularity
 - Maintaining a auto-configurable global state machine
-- Introduced a novel distributed consitency protocol   
+- Introduced a novel distributed consensu protocol      
+
 More details can be found in `selective-data-replication.pdf`
 
 
