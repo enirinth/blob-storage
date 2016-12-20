@@ -1,5 +1,12 @@
 How to use
 --
+## What is this project?
+A mock storage server that stores BLOBs(Binary Large OBjects) in geographically different data centers in a fashion that:
+- Selectively replicate BLOBs based on their popularity
+- Maintaining a auto-configurable global state machine
+- Introduced a novel distributed consitency protocol   
+More details can be found in `selective-data-replication.pdf`
+
 
 ## Set up instances
 ```sh
